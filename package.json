@@ -1,0 +1,31 @@
+{
+  "name": "0xbitcoin-uniswap-whale-alert",
+  "version": "1.0.0",
+  "description": "A bot that posts on Discord (and twitter?) about big 0xbitcoin trades",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fappablo/0xbitcoin-uniswap-whale-alert.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/fappablo/0xbitcoin-uniswap-whale-alert/issues"
+  },
+  "homepage": "https://github.com/fappablo/0xbitcoin-uniswap-whale-alert#readme",
+  "dependencies": {
+    "@ethersproject/contracts": "^5.5.0",
+    "@ethersproject/providers": "^5.5.0",
+    "coingecko-api": "^1.0.10",
+    "discord-reply": "^0.1.2",
+    "discord.js": "^12.5.1",
+    "ethers": "^5.5.1"
+  },
+  "devDependencies": {
+    "ascii-table": "0.0.9",
+    "colors": "^1.4.0"
+  }
+}

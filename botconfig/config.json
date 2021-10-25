@@ -1,0 +1,5 @@
+{
+  "token": "yourtoken",
+  "prefix": "^",
+  "defaultCommandCooldown" : 1
+}
