@@ -15,7 +15,7 @@ const blockStep = 2;
 const blockTimeMS = 13230;
 const eventsBackupFile = "eventsBackup.csv";
 const alchemyKey = "yourkey";
-const minValueForAlert = 1;
+const minValueForAlert = 2000;
 const poolAbi = [{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"sender","type":"address"},{"indexed":true,"internalType":"address","name":"recipient","type":"address"},{"indexed":false,"internalType":"int256","name":"amount0","type":"int256"},{"indexed":false,"internalType":"int256","name":"amount1","type":"int256"},{"indexed":false,"internalType":"uint160","name":"sqrtPriceX96","type":"uint160"},{"indexed":false,"internalType":"uint128","name":"liquidity","type":"uint128"},{"indexed":false,"internalType":"int24","name":"tick","type":"int24"}],"name":"Swap","type":"event"}]
 const ee = require("./botconfig/embed.json");
 
@@ -132,7 +132,7 @@ const watch = async () => {
           console.log("Saved to eventsBackup");
 
           let account = await event.getTransactionReceipt();
-          account = account.from.substring(0,8)
+          account = account.from;
           console.log(account);
           if(ethValue < minValueForAlert){
             break;
@@ -145,7 +145,7 @@ const watch = async () => {
                   .setColor(ee.color)
                   .setFooter(ee.footertext, ee.footericon)
                   .setTitle(`:whale: New Uniswap Trade :whale: `)
-                  .setDescription("["+account+"]("+baseAccountLink+account+") Sold "+swap.amount0+" **0xBTC** for "+(swap.amount1*-1)+" **ETH** (Trade value: $"+ethValue+") \n \n"+"[View Txn]("+baseLink+event.transactionHash+")")
+                  .setDescription("["+account.substring(0,8)+"]("+baseAccountLink+account+") Sold "+swap.amount0+" **0xBTC** for "+(swap.amount1*-1)+" **ETH** (Trade value: $"+ethValue+") \n \n"+"[View Txn]("+baseLink+event.transactionHash+")")
                 )
               } catch (e) {
                   console.log(String(e.stack).bgRed)
@@ -163,7 +163,7 @@ const watch = async () => {
                   .setColor(ee.color)
                   .setFooter(ee.footertext, ee.footericon)
                   .setTitle(`:whale: New Uniswap Trade :whale: `)
-                  .setDescription("["+account+"]("+baseAccountLink+account+") Bought "+(swap.amount0*-1)+" **0xBTC** for "+swap.amount1+" **ETH** (Trade value: $"+ethValue+") \n \n"+"[View Txn]("+baseLink+event.transactionHash+")")
+                  .setDescription("["+account.substring(0,8)+"]("+baseAccountLink+account+") Bought "+(swap.amount0*-1)+" **0xBTC** for "+swap.amount1+" **ETH** (Trade value: $"+ethValue+") \n \n"+"[View Txn]("+baseLink+event.transactionHash+")")
                 )
               } catch (e) {
                   console.log(String(e.stack).bgRed)
