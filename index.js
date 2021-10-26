@@ -1,30 +1,26 @@
 ﻿//Importing all needed Commands
 const { Contract } = require("@ethersproject/contracts");
+
 const { AlchemyProvider } = require("@ethersproject/providers");
-const colors = require("colors"); //this Package is used, to change the colors of our Console! (optional and doesnt effect performance)
+
+const colors = require("colors");
 
 const fs = require('fs');
 const { BigNumber } = require("ethers");
 
-const Discord = require("discord.js"); //this is the official discord.js wrapper for the Discord Api, which we use!
+const Discord = require("discord.js");
 
 const baseLink = "https://etherscan.io/tx/"
 const baseAccountLink = "https://etherscan.io/address/"
-const poolAddress = "0xaFF587846a44aa086A6555Ff69055D3380fD379a";
-const blockStep = 2;
-const blockTimeMS = 13230;
-const eventsBackupFile = "eventsBackup.csv";
-const alchemyKey = "yourkey";
-const minValueForAlert = 2000;
-const poolAbi = [{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"sender","type":"address"},{"indexed":true,"internalType":"address","name":"recipient","type":"address"},{"indexed":false,"internalType":"int256","name":"amount0","type":"int256"},{"indexed":false,"internalType":"int256","name":"amount1","type":"int256"},{"indexed":false,"internalType":"uint160","name":"sqrtPriceX96","type":"uint160"},{"indexed":false,"internalType":"uint128","name":"liquidity","type":"uint128"},{"indexed":false,"internalType":"int24","name":"tick","type":"int24"}],"name":"Swap","type":"event"}]
+
+const {poolAddress, blockStep, blockTimeMS, alchemyKey, minValueForAlert, poolAbi, latestBlockBackupFile, eventsBackupFile} = require("./config.js");
+
 const ee = require("./botconfig/embed.json");
 
 const { MessageEmbed } = require("discord.js");
 
-//1. Import coingecko-api
 const CoinGecko  = require('coingecko-api');
 
-//2. Initiate the CoinGecko API Client
 const CoinGeckoClient = new CoinGecko();
 
 function appendFile(filePath, data) {
@@ -56,7 +52,7 @@ let swapFilter = poolContract.filters.Swap();
 let syncBlock;
 
 try {
-  syncBlock = parseInt(fs.readFileSync("./backup.txt"));
+  syncBlock = parseInt(fs.readFileSync(latestBlockBackupFile));
 } catch (err) {
   checkErr(err, true);
 }
@@ -179,8 +175,8 @@ const watch = async () => {
       }
 
       syncBlock = nextSyncBlock + 1;
-      console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Saving (#" + syncBlock + ") to backup.txt");
-      fs.writeFileSync("./backup.txt", syncBlock.toString());
+      console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Saving (#" + syncBlock + ") to "+latestBlockBackupFile);
+      fs.writeFileSync(latestBlockBackupFile, syncBlock.toString());
 
       //chill for a while, don't want to make alchemy mad
       await sleep(500);
@@ -188,7 +184,7 @@ const watch = async () => {
       console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Sync done (#" + latestBlock + "), waiting for new blocks");
 
       //saving
-      fs.writeFileSync("./backup.txt", syncBlock.toString());
+      fs.writeFileSync(latestBlockBackupFile, syncBlock.toString());
 
       console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Sync status saved");
 
