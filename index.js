@@ -10,10 +10,9 @@ const { BigNumber } = require("ethers");
 
 const Discord = require("discord.js");
 
-const baseLink = "https://etherscan.io/tx/"
-const baseAccountLink = "https://etherscan.io/address/"
+const {poolAddress, blockStep, blockTimeMS, alchemyKey, minValueForAlert, poolAbi, latestBlockBackupFile, eventsBackupFile, twitterConfig, discordChannel} = require("./config.js");
 
-const {poolAddress, blockStep, blockTimeMS, alchemyKey, minValueForAlert, poolAbi, latestBlockBackupFile, eventsBackupFile} = require("./config.js");
+const twitter = require('twitter-lite');
 
 const ee = require("./botconfig/embed.json");
 
@@ -21,7 +20,12 @@ const { MessageEmbed } = require("discord.js");
 
 const CoinGecko  = require('coingecko-api');
 
+const baseLink = "https://etherscan.io/tx/"
+const baseAccountLink = "https://etherscan.io/address/"
+
 const CoinGeckoClient = new CoinGecko();
+
+const twitterClient = new twitter(twitterConfig);
 
 function appendFile(filePath, data) {
   return fs.appendFileSync(filePath, data);
@@ -103,7 +107,7 @@ client.login(require("./botconfig/config.json").token);
 
 const watch = async () => {
   while (1) {
-    const channel = client.channels.cache.get('412483801265078273');
+    const channel = client.channels.cache.get(discordChannel);
     const date = new Date();
     const latestBlock = await provider.getBlockNumber();
     if (syncBlock < latestBlock) {
@@ -129,13 +133,24 @@ const watch = async () => {
 
           let account = await event.getTransactionReceipt();
           account = account.from;
-          console.log(account);
+          //console.log(account);
           if(ethValue < minValueForAlert){
             break;
           }
 
           if(swap.amount0 > 0){
               console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Swap found: Sold "+swap.amount0+" 0xBTC for "+(swap.amount1*-1)+" Ether ($"+ethValue+")");
+
+              try{
+                let status = "🐳 "+ account.substring(0,8) + " Sold "+swap.amount0+" #0xBTC for "+(swap.amount1*-1)+" #ETH (Trade value: $"+ethValue+") \n"+baseLink+event.transactionHash;
+                
+                await twitterClient.post('statuses/update', { status: status }).then(result => {
+                  console.log('[INFO] You successfully tweeted this : "' + result.text + '"');
+                })
+              }catch (e){
+                console.log(e)
+              }
+
               try{
                 channel.send(new MessageEmbed()
                   .setColor(ee.color)
@@ -154,6 +169,16 @@ const watch = async () => {
               }
           }else{
               console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Swap found: Bought "+(swap.amount0*-1)+" 0xBTC for "+swap.amount1+" Ether ($"+ethValue+")");
+              
+              try{
+                let status = "🐳 "+ account.substring(0,8) + " Bought "+(swap.amount0*-1)+" #0xBTC for "+swap.amount1+" #ETH (Trade value: $"+ethValue+") \n"+baseLink+event.transactionHash;
+                await twitterClient.post('statuses/update', { status: status }).then(result => {
+                  console.log('[INFO] You successfully tweeted this : "' + result.text + '"');
+                })
+              }catch (e){
+                console.log(e)
+              }
+              
               try{
                 channel.send(new MessageEmbed()
                   .setColor(ee.color)

@@ -1,5 +1,5 @@
 {
-  "token": "yourtoken",
+  "token": "keyhere",
   "prefix": "^",
   "defaultCommandCooldown" : 1
 }
