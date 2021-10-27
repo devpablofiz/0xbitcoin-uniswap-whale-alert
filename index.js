@@ -120,6 +120,7 @@ client.login(require("./botconfig/config.json").token);
 
 const watch = async () => {
   while (1) {
+    client.user.setActivity('$'+lastTrade, { type: 'PLAYING' });
     const channel = client.channels.cache.get(discordChannel);
     const date = new Date();
     const latestBlock = await provider.getBlockNumber();
