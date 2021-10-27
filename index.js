@@ -1,30 +1,20 @@
 ﻿//Importing all needed Commands
 const { Contract } = require("@ethersproject/contracts");
-
 const { AlchemyProvider } = require("@ethersproject/providers");
-
 const colors = require("colors");
-
 const fs = require('fs');
 const { BigNumber } = require("ethers");
-
 const Discord = require("discord.js");
-
 const {poolAddress, blockStep, blockTimeMS, alchemyKey, minValueForAlert, poolAbi, latestBlockBackupFile, eventsBackupFile, twitterConfig, discordChannel, lastTradeBackupFile} = require("./config.js");
-
 const twitter = require('twitter-lite');
-
 const ee = require("./botconfig/embed.json");
-
 const { MessageEmbed } = require("discord.js");
-
 const CoinGecko  = require('coingecko-api');
 
 const baseLink = "https://etherscan.io/tx/"
 const baseAccountLink = "https://etherscan.io/address/"
 
 const CoinGeckoClient = new CoinGecko();
-
 const twitterClient = new twitter(twitterConfig);
 
 function appendFile(filePath, data) {
@@ -97,10 +87,10 @@ const client = new Discord.Client({
 });
 
 //Client variables to use everywhere
-client.commands = new Discord.Collection(); //an collection (like a digital map(database)) for all your commands
-client.aliases = new Discord.Collection(); //an collection for all your command-aliases
-client.categories = fs.readdirSync("./commands/"); //categories
-client.cooldowns = new Discord.Collection(); //an collection for cooldown commands of each user
+client.commands = new Discord.Collection(); 
+client.aliases = new Discord.Collection(); 
+client.categories = fs.readdirSync("./commands/"); 
+client.cooldowns = new Discord.Collection();
 
 //Loading files, with the client variable like Command Handler, Event Handler, ...
 ["command", "events"].forEach(handler => {
@@ -143,7 +133,7 @@ const watch = async () => {
           let ethValue = await getEthValue(swap.amount1)
           console.log("Swap found, value $"+ethValue);
 
-          lastTrade = (ethValue/toPositive(amount0)).toFixed(2);
+          lastTrade = (ethValue/toPositive(swap.amount0)).toFixed(2);
           console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Saving last trade $" + lastTrade + " to "+lastTradeBackupFile);
           fs.writeFileSync(lastTradeBackupFile, lastTrade.toString());
           client.user.setActivity('$'+lastTrade, { type: 'PLAYING' });
