@@ -5,8 +5,9 @@ module.exports.alchemyKey = "keyhere"; //alchemy https://dashboard.alchemyapi.io
 module.exports.minValueForAlert = 2000; //USD threshold value of the trade
 module.exports.eventsBackupFile = "eventsBackup.csv"; //file to backup events to
 module.exports.latestBlockBackupFile = "blockBackup.txt"; //file to backup latest block processed
-module.exports.twitterAPIBearer = "AAAAAAAAAAAAAAAAAAAAAEWZVAEAAAAAItp4pKNGGCuKK8cKd5%2FD0fkmXi8%3DnkFWxoqaUwpQ2qYxSTBMZmqBTx3DVZrztnaJqZ4AGfgeRRv7cC";
+module.exports.twitterAPIBearer = "keyhere";
 module.exports.discordChannel = '412483801265078273'; //channel to post in (412483801265078273 is 0xbtc's trade channel)
+module.exports.lastTradeBackupFile = "tradeBackup.txt";
 
 module.exports.twitterConfig = {  
     consumer_key: 'keyhere' ,  

@@ -10,7 +10,7 @@ const { BigNumber } = require("ethers");
 
 const Discord = require("discord.js");
 
-const {poolAddress, blockStep, blockTimeMS, alchemyKey, minValueForAlert, poolAbi, latestBlockBackupFile, eventsBackupFile, twitterConfig, discordChannel} = require("./config.js");
+const {poolAddress, blockStep, blockTimeMS, alchemyKey, minValueForAlert, poolAbi, latestBlockBackupFile, eventsBackupFile, twitterConfig, discordChannel, lastTradeBackupFile} = require("./config.js");
 
 const twitter = require('twitter-lite');
 
@@ -105,6 +105,13 @@ client.cooldowns = new Discord.Collection(); //an collection for cooldown comman
 //login into the bot
 client.login(require("./botconfig/config.json").token);
 
+let lastTrade;
+try {
+  lastTrade = parseInt(fs.readFileSync(lastTradeBackupFile));
+} catch (err) {
+  checkErr(err, true);
+}
+
 const watch = async () => {
   while (1) {
     const channel = client.channels.cache.get(discordChannel);
@@ -128,6 +135,12 @@ const watch = async () => {
 
           let ethValue = await getEthValue(swap.amount1)
           console.log("Swap found, value $"+ethValue);
+
+          lastTrade = ethValue;
+          console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Saving last trade $" + lastTrade + " to "+lastTradeBackupFile);
+          fs.writeFileSync(lastTradeBackupFile, lastTrade.toString());
+          client.user.setActivity('Last trade: $'+lastTrade, { type: 'PLAYING' });
+
           saveEvent(date, "SWAP", swap.amount0, swap.amount1);
           console.log("Saved to eventsBackup");
 
@@ -221,6 +234,7 @@ const watch = async () => {
 
 client.once('ready', () => {
   console.log('Ready!');
+  client.user.setActivity('Last trade: $'+lastTrade, { type: 'PLAYING' });
   watch();
 });
 
