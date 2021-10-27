@@ -69,11 +69,16 @@ function saveEvent(date,type, amount0, amount1) {
   }
 }
 
+function toPositive(value){
+  if(value < 0){
+    return value*-1
+  }else{
+    return value
+  }
+}
+
 async function getEthValue(amountETH){
-    let realAmount = amountETH;
-    if(amountETH < 0){
-        realAmount = amountETH*-1;
-    }
+    let realAmount = toPositive(amountETH);
     const ethData = await CoinGeckoClient.coins.fetch('ethereum', {});
     const ethUsdPrice = ethData.data.market_data.current_price.usd;
     
@@ -102,15 +107,16 @@ client.cooldowns = new Discord.Collection(); //an collection for cooldown comman
     require(`./handlers/${handler}`)(client);
 });
 
-//login into the bot
-client.login(require("./botconfig/config.json").token);
-
 let lastTrade;
 try {
-  lastTrade = parseInt(fs.readFileSync(lastTradeBackupFile));
+  lastTrade = parseFloat(fs.readFileSync(lastTradeBackupFile));
+  console.log("Last "+lastTrade);
 } catch (err) {
   checkErr(err, true);
 }
+
+//login into the bot
+client.login(require("./botconfig/config.json").token);
 
 const watch = async () => {
   while (1) {
@@ -136,10 +142,10 @@ const watch = async () => {
           let ethValue = await getEthValue(swap.amount1)
           console.log("Swap found, value $"+ethValue);
 
-          lastTrade = ethValue;
+          lastTrade = (ethValue/toPositive(amount0)).toFixed(2);
           console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Saving last trade $" + lastTrade + " to "+lastTradeBackupFile);
           fs.writeFileSync(lastTradeBackupFile, lastTrade.toString());
-          client.user.setActivity('Last trade: $'+lastTrade, { type: 'PLAYING' });
+          client.user.setActivity('$'+lastTrade, { type: 'PLAYING' });
 
           saveEvent(date, "SWAP", swap.amount0, swap.amount1);
           console.log("Saved to eventsBackup");
@@ -234,7 +240,7 @@ const watch = async () => {
 
 client.once('ready', () => {
   console.log('Ready!');
-  client.user.setActivity('Last trade: $'+lastTrade, { type: 'PLAYING' });
+  client.user.setActivity('$'+lastTrade, { type: 'PLAYING' });
   watch();
 });
 
