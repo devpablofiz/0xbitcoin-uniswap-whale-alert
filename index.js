@@ -5,7 +5,7 @@ const colors = require("colors");
 const fs = require('fs');
 const { BigNumber } = require("ethers");
 const Discord = require("discord.js");
-const {poolAddress, blockStep, blockTimeMS, alchemyKey, minValueForAlert, poolAbi, latestBlockBackupFile, eventsBackupFile, twitterConfig, discordChannel, lastTradeBackupFile} = require("./config.js");
+const {uniV3Address, uniV2Address, blockStep, blockTimeMS, alchemyKey, minValueForAlert, uniV3Abi, uniV2Abi, latestBlockBackupFile, eventsBackupFile, twitterConfig, discordChannel, lastTradeBackupFile} = require("./config.js");
 const twitter = require('twitter-lite');
 const ee = require("./botconfig/embed.json");
 const { MessageEmbed } = require("discord.js");
@@ -38,9 +38,11 @@ function sleep(ms) {
 
 const provider = new AlchemyProvider("homestead", alchemyKey);
 
-const poolContract = new Contract(poolAddress, poolAbi, provider);
+const uniV3 = new Contract(uniV3Address, uniV3Abi, provider);
+const uniV2 = new Contract(uniV2Address, uniV2Abi, provider);
 
-let swapFilter = poolContract.filters.Swap();
+let v3swapFilter = uniV3.filters.Swap();
+let v2swapFilter = uniV2.filters.Swap();
 
 //last block synced
 let syncBlock;
@@ -122,11 +124,17 @@ const watch = async () => {
       if (nextSyncBlock > latestBlock) {
         nextSyncBlock = latestBlock;
       }
-
-      let events = await poolContract.queryFilter(swapFilter, syncBlock, nextSyncBlock);
+      
+      let v2events = await uniV2.queryFilter(v2swapFilter, syncBlock, nextSyncBlock);
+      sleep(100);
+      let v3events = await uniV3.queryFilter(v3swapFilter, syncBlock, nextSyncBlock);
       sleep(100);
 
-      for (const event of events) {
+
+      /**
+       *  V3 EVENTS
+       */
+      for (const event of v3events) {
         if (event.event == "Swap") {
           const swap = { amount0: (BigNumber.from(event.args.amount0)/Math.pow(10,8)).toFixed(2), amount1: (BigNumber.from(event.args.amount1)/Math.pow(10,18)).toFixed(2)}
 
@@ -138,7 +146,7 @@ const watch = async () => {
           fs.writeFileSync(lastTradeBackupFile, lastTrade.toString());
           client.user.setActivity('$'+lastTrade, { type: 'PLAYING' });
 
-          saveEvent(date, "SWAP", swap.amount0, swap.amount1);
+          saveEvent(date, "SWAPv3", swap.amount0, swap.amount1);
           console.log("Saved to eventsBackup");
 
           let account = await event.getTransactionReceipt();
@@ -165,7 +173,7 @@ const watch = async () => {
                 channel.send(new MessageEmbed()
                   .setColor(ee.color)
                   .setFooter(ee.footertext, ee.footericon)
-                  .setTitle(`:whale: New Uniswap Trade :whale: `)
+                  .setTitle(`:whale: New Uniswap V3 Trade :whale: `)
                   .setDescription("["+account.substring(0,8)+"]("+baseAccountLink+account+") Sold "+swap.amount0+" **0xBTC** for "+(swap.amount1*-1)+" **ETH** (Trade value: $"+ethValue+") \n \n"+"[View Txn]("+baseLink+event.transactionHash+")")
                 )
               } catch (e) {
@@ -193,7 +201,99 @@ const watch = async () => {
                 channel.send(new MessageEmbed()
                   .setColor(ee.color)
                   .setFooter(ee.footertext, ee.footericon)
-                  .setTitle(`:whale: New Uniswap Trade :whale: `)
+                  .setTitle(`:whale: New Uniswap V3 Trade :whale: `)
+                  .setDescription("["+account.substring(0,8)+"]("+baseAccountLink+account+") Bought "+(swap.amount0*-1)+" **0xBTC** for "+swap.amount1+" **ETH** (Trade value: $"+ethValue+") \n \n"+"[View Txn]("+baseLink+event.transactionHash+")")
+                )
+              } catch (e) {
+                  console.log(String(e.stack).bgRed)
+                  message.channel.send(new MessageEmbed()
+                      .setColor(ee.wrongcolor)
+                      .setFooter(ee.footertext, ee.footericon)
+                      .setTitle(`❌ ERROR | An error occurred`)
+                      .setDescription(`\`\`\`${e.stack}\`\`\``)
+                  );
+              }
+          }
+        } 
+      }
+      sleep(100);
+      /**
+       * V2 EVENTS
+       */
+      for (const event of v2events) {
+        if (event.event == "Swap") {
+          let swap;
+
+          //if its a sale
+          if(BigNumber.from(event.args.amount0in) != 0){
+            swap = { amount0: (BigNumber.from(event.args.amount0in)/Math.pow(10,8)).toFixed(2), amount1: (BigNumber.from(event.args.amount1out)/Math.pow(10,18)).toFixed(2)}
+          }else{
+            //its a buy
+            swap = { amount0: (BigNumber.from(event.args.amount0out)/Math.pow(10,8)*-1).toFixed(2), amount1: (BigNumber.from(event.args.amount1in)/Math.pow(10,18)).toFixed(2)}
+          }
+
+          let ethValue = await getEthValue(swap.amount1)
+          console.log("Swap found, value $"+ethValue);
+
+          lastTrade = (ethValue/toPositive(swap.amount0)).toFixed(2);
+          console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Saving last trade $" + lastTrade + " to "+lastTradeBackupFile);
+
+          saveEvent(date, "SWAPv2", swap.amount0, swap.amount1);
+          console.log("Saved to eventsBackup");
+
+          let account = await event.getTransactionReceipt();
+          account = account.from;
+          //console.log(account);
+          if(ethValue < minValueForAlert){
+            break;
+          }
+
+          if(swap.amount0 > 0){
+              console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Swap found: Sold "+swap.amount0+" 0xBTC for "+swap.amount1+" Ether ($"+ethValue+")");
+
+              try{
+                let status = "🐳 "+ account.substring(0,8) + " Sold "+swap.amount0+" #0xBTC for "+swap.amount1+" #ETH (Trade value: $"+ethValue+") \n"+baseLink+event.transactionHash;
+                
+                await twitterClient.post('statuses/update', { status: status }).then(result => {
+                  console.log('[INFO] You successfully tweeted this : "' + result.text + '"');
+                })
+              }catch (e){
+                console.log(e)
+              }
+
+              try{
+                channel.send(new MessageEmbed()
+                  .setColor(ee.color)
+                  .setFooter(ee.footertext, ee.footericon)
+                  .setTitle(`:whale: New Uniswap V2 Trade :whale: `)
+                  .setDescription("["+account.substring(0,8)+"]("+baseAccountLink+account+") Sold "+swap.amount0+" **0xBTC** for "+(swap.amount1*-1)+" **ETH** (Trade value: $"+ethValue+") \n \n"+"[View Txn]("+baseLink+event.transactionHash+")")
+                )
+              } catch (e) {
+                  console.log(String(e.stack).bgRed)
+                  channel.send(new MessageEmbed()
+                      .setColor(ee.wrongcolor)
+                      .setFooter(ee.footertext, ee.footericon)
+                      .setTitle(`❌ ERROR | An error occurred`)
+                      .setDescription(`\`\`\`${e.stack}\`\`\``)
+                  );
+              }
+          }else{
+              console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Swap found: Bought "+(swap.amount0*-1)+" 0xBTC for "+swap.amount1+" Ether ($"+ethValue+")");
+              
+              try{
+                let status = "🐳 "+ account.substring(0,8) + " Bought "+(swap.amount0*-1)+" #0xBTC for "+swap.amount1+" #ETH (Trade value: $"+ethValue+") \n"+baseLink+event.transactionHash;
+                await twitterClient.post('statuses/update', { status: status }).then(result => {
+                  console.log('[INFO] You successfully tweeted this : "' + result.text + '"');
+                })
+              }catch (e){
+                console.log(e)
+              }
+              
+              try{
+                channel.send(new MessageEmbed()
+                  .setColor(ee.color)
+                  .setFooter(ee.footertext, ee.footericon)
+                  .setTitle(`:whale: New Uniswap V2 Trade :whale: `)
                   .setDescription("["+account.substring(0,8)+"]("+baseAccountLink+account+") Bought "+(swap.amount0*-1)+" **0xBTC** for "+swap.amount1+" **ETH** (Trade value: $"+ethValue+") \n \n"+"[View Txn]("+baseLink+event.transactionHash+")")
                 )
               } catch (e) {
