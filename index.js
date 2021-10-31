@@ -225,18 +225,15 @@ const watch = async () => {
           let swap;
 
           //if its a sale
-          if(BigNumber.from(event.args.amount0in) != 0){
-            swap = { amount0: (BigNumber.from(event.args.amount0in)/Math.pow(10,8)).toFixed(2), amount1: (BigNumber.from(event.args.amount1out)/Math.pow(10,18)).toFixed(2)}
+          if(BigNumber.from(event.args.amount0In) != 0){
+            swap = { amount0: (BigNumber.from(event.args.amount0In)/Math.pow(10,8)).toFixed(2), amount1: (BigNumber.from(event.args.amount0Out)/Math.pow(10,18)).toFixed(2)}
           }else{
             //its a buy
-            swap = { amount0: (BigNumber.from(event.args.amount0out)/Math.pow(10,8)*-1).toFixed(2), amount1: (BigNumber.from(event.args.amount1in)/Math.pow(10,18)).toFixed(2)}
+            swap = { amount0: (BigNumber.from(event.args.amount0Out)/Math.pow(10,8)*-1).toFixed(2), amount1: (BigNumber.from(event.args.amount1In)/Math.pow(10,18)).toFixed(2)}
           }
 
           let ethValue = await getEthValue(swap.amount1)
           console.log("Swap found, value $"+ethValue);
-
-          lastTrade = (ethValue/toPositive(swap.amount0)).toFixed(2);
-          console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Saving last trade $" + lastTrade + " to "+lastTradeBackupFile);
 
           saveEvent(date, "SWAPv2", swap.amount0, swap.amount1);
           console.log("Saved to eventsBackup");
