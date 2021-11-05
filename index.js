@@ -116,6 +116,8 @@ const watch = async () => {
     const channel = client.channels.cache.get(discordChannel);
     const date = new Date();
     const latestBlock = await provider.getBlockNumber();
+    let arbs = []
+
     if (syncBlock < latestBlock) {
       console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Syncing at block " + syncBlock + "/" + latestBlock);
 
@@ -136,7 +138,37 @@ const watch = async () => {
        */
       for (const event of v3events) {
         if (event.event == "Swap") {
+          let isArb = false;
+          let margin = 0;
+          let account = await event.getTransactionReceipt();
+          account = account.from;
           const swap = { amount0: (BigNumber.from(event.args.amount0)/Math.pow(10,8)).toFixed(2), amount1: (BigNumber.from(event.args.amount1)/Math.pow(10,18)).toFixed(2)}
+          
+          for(const v2event of v2events){
+            let v2swap;
+
+            //if its a sale
+            if(BigNumber.from(v2event.args.amount0In) != 0){
+              v2swap = { amount0: (BigNumber.from(v2event.args.amount0In)/Math.pow(10,8)).toFixed(2), amount1: (BigNumber.from(v2event.args.amount0Out)/Math.pow(10,18)).toFixed(2)}
+            }else{
+              //its a buy
+              v2swap = { amount0: (BigNumber.from(v2event.args.amount0Out)/Math.pow(10,8)*-1).toFixed(2), amount1: (BigNumber.from(v2event.args.amount1In)/Math.pow(10,18)).toFixed(2)}
+            }
+
+            if(toPositive(v2swap.amount0) == toPositive(swap.amount0) && v2event.transactionHash == event.transactionHash){
+              isArb = true;
+              arbs.push(event.transactionHash);
+              if(v2swap.amount1 > swap.amount1){
+                margin = toPositive(v2swap.amount1)-toPositive(swap.amount1);
+              }else{
+                margin = toPositive(swap.amount1)-toPositive(v2swap.amount1);
+              }
+            }
+          }
+
+          if(margin != 0){
+            margin = toPositive(margin.toFixed(3))
+          }
 
           let ethValue = await getEthValue(swap.amount1)
           console.log("Swap found, value $"+ethValue);
@@ -149,14 +181,27 @@ const watch = async () => {
           saveEvent(date, "SWAPv3", swap.amount0, swap.amount1);
           console.log("Saved to eventsBackup");
 
-          let account = await event.getTransactionReceipt();
-          account = account.from;
-          //console.log(account);
           if(ethValue < minValueForAlert){
             break;
           }
-
-          if(swap.amount0 > 0){
+          if(isArb){
+              try{
+                channel.send(new MessageEmbed()
+                  .setColor(ee.color)
+                  .setFooter(ee.footertext, ee.footericon)
+                  .setTitle(`:whale: New Uniswap Arbitrage Trade :whale: `)
+                  .setDescription("["+account.substring(0,8)+"]("+baseAccountLink+account+") Arbitraged "+swap.amount0+" **0xBTC** for a margin of "+margin+" **ETH** (Trade value: $"+ethValue+") \n \n"+"[View Txn]("+baseLink+event.transactionHash+")")
+                )
+              } catch (e) {
+                  console.log(String(e.stack).bgRed)
+                  channel.send(new MessageEmbed()
+                      .setColor(ee.wrongcolor)
+                      .setFooter(ee.footertext, ee.footericon)
+                      .setTitle(`❌ ERROR | An error occurred`)
+                      .setDescription(`\`\`\`${e.stack}\`\`\``)
+                  );
+              }
+          }else if(swap.amount0 > 0){
               console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Swap found: Sold "+swap.amount0+" 0xBTC for "+(swap.amount1*-1)+" Ether ($"+ethValue+")");
 
               try{
@@ -221,7 +266,7 @@ const watch = async () => {
        * V2 EVENTS
        */
       for (const event of v2events) {
-        if (event.event == "Swap") {
+        if (event.event == "Swap" && !arbs.includes(event.transactionHash)) {
           let swap;
 
           //if its a sale
@@ -231,6 +276,7 @@ const watch = async () => {
             //its a buy
             swap = { amount0: (BigNumber.from(event.args.amount0Out)/Math.pow(10,8)*-1).toFixed(2), amount1: (BigNumber.from(event.args.amount1In)/Math.pow(10,18)).toFixed(2)}
           }
+          
 
           let ethValue = await getEthValue(swap.amount1)
           console.log("Swap found, value $"+ethValue);
