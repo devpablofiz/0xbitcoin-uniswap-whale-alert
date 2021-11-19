@@ -5,7 +5,7 @@ const colors = require("colors");
 const fs = require('fs');
 const { BigNumber } = require("ethers");
 const Discord = require("discord.js");
-const { uniV3Address, uniV2Address, blockStep, blockTimeMS, alchemyKey, minValueForAlert, uniV3Abi, uniV2Abi, latestBlockBackupFile, eventsBackupFile, twitterConfig, discordChannel, lastTradeBackupFile } = require("./config.js");
+const { uniV3Address, uniV2Address, blockStep, blockTimeMS, alchemyKey, minValueForAlert, uniV3Abi, uniV2Abi, latestBlockBackupFile, eventsBackupFile, twitterConfig, discordChannel, lastTradeBackupFile, minArbMargin } = require("./config.js");
 const twitter = require('twitter-lite');
 const ee = require("./botconfig/embed.json");
 const { MessageEmbed } = require("discord.js");
@@ -149,8 +149,9 @@ const watch = async () => {
         if (event.event == "Swap") {
           let isArb = false;
           let margin = 0;
-          let account = await event.getTransactionReceipt();
-          account = account.from;
+          let txn = await event.getTransactionReceipt();
+          let account = txn.from;
+          let txnCost = (txn.cumulativeGasUsed*txn.effectiveGasPrice*Math.pow(10, 18)).toFixed(4);
           const swap = { amount0: (BigNumber.from(event.args.amount0) / Math.pow(10, 8)).toFixed(2), amount1: (BigNumber.from(event.args.amount1) / Math.pow(10, 18)).toFixed(2) }
 
           for (const v2event of v2events) {
@@ -168,9 +169,9 @@ const watch = async () => {
               isArb = true;
               arbs.push(event.transactionHash);
               if (v2swap.amount1 > swap.amount1) {
-                margin = toPositive(v2swap.amount1) - toPositive(swap.amount1);
+                margin = toPositive(v2swap.amount1) - toPositive(swap.amount1) - txnCost;
               } else {
-                margin = toPositive(swap.amount1) - toPositive(v2swap.amount1);
+                margin = toPositive(swap.amount1) - toPositive(v2swap.amount1) - txnCost;
               }
             }
           }
@@ -190,9 +191,10 @@ const watch = async () => {
           saveEvent(date, "SWAPv3", swap.amount0, swap.amount1);
           console.log("Saved to eventsBackup");
 
-          if (ethValue < minValueForAlert) {
+          if (margin < minArbMargin) {
             break;
           }
+
           if (isArb) {
             try {
               channel.send(new MessageEmbed()
@@ -210,7 +212,7 @@ const watch = async () => {
                 .setDescription(`\`\`\`${e.stack}\`\`\``)
               );
             }
-          } else if (swap.amount0 > 0) {
+          } else if (swap.amount0 > 0 && ethValue > minValueForAlert) {
             console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Swap found: Sold " + swap.amount0 + " 0xBTC for " + (swap.amount1 * -1) + " Ether ($" + ethValue + ")");
 
             try {
@@ -239,7 +241,7 @@ const watch = async () => {
                 .setDescription(`\`\`\`${e.stack}\`\`\``)
               );
             }
-          } else {
+          } else if(ethValue > minValueForAlert) {
             console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Swap found: Bought " + (swap.amount0 * -1) + " 0xBTC for " + swap.amount1 + " Ether ($" + ethValue + ")");
 
             try {
