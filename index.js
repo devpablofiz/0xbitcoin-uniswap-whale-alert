@@ -142,7 +142,7 @@ const watch = async () => {
           let margin = 0;
           let account = await event.getTransactionReceipt();
           account = account.from;
-          const swap = { amount0: (BigNumber.from(event.args.amount0)/Math.pow(10,8))*-1.toFixed(2), amount1: (BigNumber.from(event.args.amount1)/Math.pow(10,18)).toFixed(2)}
+          const swap = { amount0: (BigNumber.from(event.args.amount0)/Math.pow(10,8)).toFixed(2), amount1: (BigNumber.from(event.args.amount1)/Math.pow(10,18)).toFixed(2)}
           
           for(const v2event of v2events){
             let v2swap;
