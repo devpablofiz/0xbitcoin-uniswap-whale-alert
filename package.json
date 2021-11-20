@@ -19,6 +19,7 @@
   "dependencies": {
     "@ethersproject/contracts": "^5.5.0",
     "@ethersproject/providers": "^5.5.0",
+    "@ethersproject/units": "^5.5.0",
     "coingecko-api": "^1.0.10",
     "discord-reply": "^0.1.2",
     "discord.js": "^12.5.1",
