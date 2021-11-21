@@ -195,7 +195,7 @@ const watch = async () => {
           saveEvent(date, "SWAPv3", swap.amount0, swap.amount1);
           console.log("Saved to eventsBackup");
 
-          if (margin < minArbMargin) {
+          if (margin != 0 && margin < minArbMargin) {
             break;
           }
 
