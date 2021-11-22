@@ -152,6 +152,9 @@ const watch = async () => {
           let margin = 0;
           let txn = await event.getTransactionReceipt();
           let account = txn.from;
+          
+          let ensName = await provider.lookupAddress(account);
+
           let gasUsed = txn.gasUsed;
           let gasPrice = formatEther(txn.effectiveGasPrice);
           let txnCost = gasUsed*gasPrice
@@ -205,7 +208,7 @@ const watch = async () => {
                 .setColor(ee.color)
                 .setFooter(ee.footertext, ee.footericon)
                 .setTitle(`:whale: New Uniswap Arbitrage Trade :whale: `)
-                .setDescription("[" + account.substring(0, 8) + "](" + baseAccountLink + account + ") Arbitraged " + toPositive(swap.amount0) + " **0xBTC** for a margin of " + margin + " **ETH** (Trade value: $" + ethValue + ") \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
+                .setDescription("[" + ((ensName) ? ensName : account.substring(0, 8)) + "](" + baseAccountLink + account + ") Arbitraged " + toPositive(swap.amount0) + " **0xBTC** for a margin of " + margin + " **ETH** (Trade value: $" + ethValue + ") \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
               )
             } catch (e) {
               console.log(String(e.stack).bgRed)
@@ -220,7 +223,7 @@ const watch = async () => {
             console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Swap found: Sold " + swap.amount0 + " 0xBTC for " + (swap.amount1 * -1) + " Ether ($" + ethValue + ")");
 
             try {
-              let status = "🐳 " + account.substring(0, 8) + " Sold " + swap.amount0 + " #0xBTC for " + (swap.amount1 * -1) + " #ETH (Trade value: $" + ethValue + ") \n" + baseLink + event.transactionHash;
+              let status = "🐳 " + ((ensName) ? ensName : account.substring(0, 8)) + " Sold " + swap.amount0 + " #0xBTC for " + (swap.amount1 * -1) + " #ETH (Trade value: $" + ethValue + ") \n" + baseLink + event.transactionHash;
 
               await twitterClient.post('statuses/update', { status: status }).then(result => {
                 console.log('[INFO] You successfully tweeted this : "' + result.text + '"');
@@ -234,7 +237,7 @@ const watch = async () => {
                 .setColor(ee.color)
                 .setFooter(ee.footertext, ee.footericon)
                 .setTitle(`:whale: New Uniswap V3 Trade :whale: `)
-                .setDescription("[" + account.substring(0, 8) + "](" + baseAccountLink + account + ") Sold " + swap.amount0 + " **0xBTC** for " + (swap.amount1 * -1).toFixed(2) + " **ETH** (Trade value: $" + ethValue + ") \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
+                .setDescription("[" + ((ensName) ? ensName : account.substring(0, 8)) + "](" + baseAccountLink + account + ") Sold " + swap.amount0 + " **0xBTC** for " + (swap.amount1 * -1).toFixed(2) + " **ETH** (Trade value: $" + ethValue + ") \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
               )
             } catch (e) {
               console.log(String(e.stack).bgRed)
@@ -249,7 +252,7 @@ const watch = async () => {
             console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Swap found: Bought " + (swap.amount0 * -1) + " 0xBTC for " + swap.amount1 + " Ether ($" + ethValue + ")");
 
             try {
-              let status = "🐳 " + account.substring(0, 8) + " Bought " + (swap.amount0 * -1) + " #0xBTC for " + swap.amount1 + " #ETH (Trade value: $" + ethValue + ") \n" + baseLink + event.transactionHash;
+              let status = "🐳 " + ((ensName) ? ensName : account.substring(0, 8)) + " Bought " + (swap.amount0 * -1) + " #0xBTC for " + swap.amount1 + " #ETH (Trade value: $" + ethValue + ") \n" + baseLink + event.transactionHash;
               await twitterClient.post('statuses/update', { status: status }).then(result => {
                 console.log('[INFO] You successfully tweeted this : "' + result.text + '"');
               })
@@ -262,7 +265,7 @@ const watch = async () => {
                 .setColor(ee.color)
                 .setFooter(ee.footertext, ee.footericon)
                 .setTitle(`:whale: New Uniswap V3 Trade :whale: `)
-                .setDescription("[" + account.substring(0, 8) + "](" + baseAccountLink + account + ") Bought " + (swap.amount0 * -1) + " **0xBTC** for " + (swap.amount1*1).toFixed(2) + " **ETH** (Trade value: $" + ethValue + ") \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
+                .setDescription("[" + ((ensName) ? ensName : account.substring(0, 8)) + "](" + baseAccountLink + account + ") Bought " + (swap.amount0 * -1) + " **0xBTC** for " + (swap.amount1*1).toFixed(2) + " **ETH** (Trade value: $" + ethValue + ") \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
               )
             } catch (e) {
               console.log(String(e.stack).bgRed)
@@ -310,7 +313,7 @@ const watch = async () => {
             console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Swap found: Sold " + swap.amount0 + " 0xBTC for " + swap.amount1 + " Ether ($" + ethValue + ")");
 
             try {
-              let status = "🐳 " + account.substring(0, 8) + " Sold " + swap.amount0 + " #0xBTC for " + swap.amount1 + " #ETH (Trade value: $" + ethValue + ") \n" + baseLink + event.transactionHash;
+              let status = "🐳 " + ((ensName) ? ensName : account.substring(0, 8)) + " Sold " + swap.amount0 + " #0xBTC for " + swap.amount1 + " #ETH (Trade value: $" + ethValue + ") \n" + baseLink + event.transactionHash;
 
               await twitterClient.post('statuses/update', { status: status }).then(result => {
                 console.log('[INFO] You successfully tweeted this : "' + result.text + '"');
@@ -324,7 +327,7 @@ const watch = async () => {
                 .setColor(ee.color)
                 .setFooter(ee.footertext, ee.footericon)
                 .setTitle(`:whale: New Uniswap V2 Trade :whale: `)
-                .setDescription("[" + account.substring(0, 8) + "](" + baseAccountLink + account + ") Sold " + swap.amount0 + " **0xBTC** for " + (swap.amount1 * -1) + " **ETH** (Trade value: $" + ethValue + ") \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
+                .setDescription("[" + ((ensName) ? ensName : account.substring(0, 8)) + "](" + baseAccountLink + account + ") Sold " + swap.amount0 + " **0xBTC** for " + (swap.amount1 * -1) + " **ETH** (Trade value: $" + ethValue + ") \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
               )
             } catch (e) {
               console.log(String(e.stack).bgRed)
@@ -339,7 +342,7 @@ const watch = async () => {
             console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Swap found: Bought " + (swap.amount0 * -1) + " 0xBTC for " + swap.amount1 + " Ether ($" + ethValue + ")");
 
             try {
-              let status = "🐳 " + account.substring(0, 8) + " Bought " + (swap.amount0 * -1) + " #0xBTC for " + swap.amount1 + " #ETH (Trade value: $" + ethValue + ") \n" + baseLink + event.transactionHash;
+              let status = "🐳 " + ((ensName) ? ensName : account.substring(0, 8)) + " Bought " + (swap.amount0 * -1) + " #0xBTC for " + swap.amount1 + " #ETH (Trade value: $" + ethValue + ") \n" + baseLink + event.transactionHash;
               await twitterClient.post('statuses/update', { status: status }).then(result => {
                 console.log('[INFO] You successfully tweeted this : "' + result.text + '"');
               })
@@ -352,7 +355,7 @@ const watch = async () => {
                 .setColor(ee.color)
                 .setFooter(ee.footertext, ee.footericon)
                 .setTitle(`:whale: New Uniswap V2 Trade :whale: `)
-                .setDescription("[" + account.substring(0, 8) + "](" + baseAccountLink + account + ") Bought " + (swap.amount0 * -1) + " **0xBTC** for " + swap.amount1 + " **ETH** (Trade value: $" + ethValue + ") \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
+                .setDescription("[" + ((ensName) ? ensName : account.substring(0, 8)) + "](" + baseAccountLink + account + ") Bought " + (swap.amount0 * -1) + " **0xBTC** for " + swap.amount1 + " **ETH** (Trade value: $" + ethValue + ") \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
               )
             } catch (e) {
               console.log(String(e.stack).bgRed)

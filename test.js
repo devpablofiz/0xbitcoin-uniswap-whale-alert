@@ -70,10 +70,10 @@ function toPositive(value) {
 
 async function getEthValue(amountETH) {
   let realAmount = toPositive(amountETH);
-  const ethData = await CoinGeckoClient.coins.fetch('ethereum', {});
-  const ethUsdPrice = ethData.data.market_data.current_price.usd;
+  //const ethData = await CoinGeckoClient.coins.fetch('ethereum', {});
+  //const ethUsdPrice = ethData.data.market_data.current_price.usd;
 
-  return (realAmount * ethUsdPrice).toFixed(0);
+  return (realAmount * 4000).toFixed(0);
 }
 
 const watch = async () => {
@@ -106,6 +106,14 @@ const watch = async () => {
           let margin = 0;
           let txn = await event.getTransactionReceipt();
           let account = txn.from;
+          let ensName
+          try{
+            ensName = await provider.lookupAddress(account);
+          }catch (err){
+            console.log(err);
+          }
+          console.log(ensName);
+          console.log(account);
           let gasUsed = txn.gasUsed;
           let gasPrice = formatEther(txn.effectiveGasPrice);
           let txnCost = gasUsed*gasPrice
@@ -143,17 +151,18 @@ const watch = async () => {
           console.log("Margin with txcost "+margin);
 
           let ethValue = await getEthValue(swap.amount1)
-          console.log("Swap found, value $" + ethValue);
+          //console.log(ensName);
+          console.log("Swap found, value $" + ethValue + " from "+ ((ensName) ? ensName : account.substring(0, 8)));
 
           lastTrade = (ethValue / toPositive(swap.amount0)).toFixed(2);
           console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Saving last trade $" + lastTrade + " to " + lastTradeBackupFile);
 
-          if (margin < minArbMargin) {
+          if (margin != 0 && margin < minArbMargin) {
             break;
           }
 
           if (isArb) {
-            console.log("[" + account.substring(0, 8) + "](" + baseAccountLink + account + ") Arbitraged " + toPositive(swap.amount0) + " **0xBTC** for a margin of " + margin + " **ETH** (Trade value: $" + ethValue + ") \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
+            console.log("[" + ensName ? ensName : account.substring(0, 8) + "](" + baseAccountLink + account + ") Arbitraged " + toPositive(swap.amount0) + " **0xBTC** for a margin of " + margin + " **ETH** (Trade value: $" + ethValue + ") \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
           } else if (swap.amount0 > 0 && ethValue > minValueForAlert) {
             console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Swap found: Sold " + swap.amount0 + " 0xBTC for " + (swap.amount1 * -1).toFixed(2) + " Ether ($" + ethValue + ")");
           } else if(ethValue > minValueForAlert) {
