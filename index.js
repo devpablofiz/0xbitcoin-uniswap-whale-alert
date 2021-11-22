@@ -302,8 +302,10 @@ const watch = async () => {
           saveEvent(date, "SWAPv2", swap.amount0, swap.amount1);
           console.log("Saved to eventsBackup");
 
-          let account = await event.getTransactionReceipt();
-          account = account.from;
+          let txn = await event.getTransactionReceipt();
+          let account = txn.from;
+          let ensName = await provider.lookupAddress(account);
+
           //console.log(account);
           if (ethValue < minValueForAlert) {
             break;
