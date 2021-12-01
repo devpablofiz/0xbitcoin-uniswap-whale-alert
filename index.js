@@ -203,12 +203,13 @@ const watch = async () => {
           }
 
           if (isArb) {
+            let marginValue = await getEthValue(margin);
             try {
               channel.send(new MessageEmbed()
                 .setColor(ee.color)
                 .setFooter(ee.footertext, ee.footericon)
                 .setTitle(`:whale: New Uniswap Arbitrage Trade :whale: `)
-                .setDescription("[" + ((ensName) ? ensName : account.substring(0, 8)) + "](" + baseAccountLink + account + ") Arbitraged " + toPositive(swap.amount0) + " **0xBTC** for a margin of " + margin + " **ETH** (Trade value: $" + ethValue + ") \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
+                .setDescription("[" + ((ensName) ? ensName : account.substring(0, 8)) + "](" + baseAccountLink + account + ") Arbitraged " + toPositive(swap.amount0) + " **0xBTC** for a margin of " + margin + " **ETH** (Arb value: $" + marginValue + ") \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
               )
             } catch (e) {
               console.log(String(e.stack).bgRed)
