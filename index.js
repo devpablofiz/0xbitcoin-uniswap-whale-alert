@@ -122,7 +122,7 @@ client.login(require("./botconfig/config.json").token);
 
 const watch = async () => {
   while (1) {
-    client.user.setActivity('$' + lastTrade, { type: 'PLAYING' });
+    client.user.setActivity('the long game', { type: 'PLAYING' });
     const channel = client.channels.cache.get(discordChannel);
     const date = new Date();
     const latestBlock = await provider.getBlockNumber();
@@ -193,7 +193,7 @@ const watch = async () => {
           lastTrade = (ethValue / toPositive(swap.amount0)).toFixed(2);
           console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Saving last trade $" + lastTrade + " to " + lastTradeBackupFile);
           fs.writeFileSync(lastTradeBackupFile, lastTrade.toString());
-          client.user.setActivity('$' + lastTrade, { type: 'PLAYING' });
+          client.user.setActivity('the long game', { type: 'PLAYING' });
 
           saveEvent(date, "SWAPv3", swap.amount0, swap.amount1);
           console.log("Saved to eventsBackup");
@@ -203,6 +203,7 @@ const watch = async () => {
           }
 
           if (isArb) {
+            /*
             let marginValue = await getEthValue(margin);
             try {
               channel.send(new MessageEmbed()
@@ -220,6 +221,7 @@ const watch = async () => {
                 .setDescription(`\`\`\`${e.stack}\`\`\``)
               );
             }
+            */
           } else if (swap.amount0 > 0 && ethValue > minValueForAlert) {
             console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Swap found: Sold " + swap.amount0 + " 0xBTC for " + (swap.amount1 * -1) + " Ether ($" + ethValue + ")");
 
@@ -395,7 +397,7 @@ const watch = async () => {
 
 client.once('ready', () => {
   console.log('Ready!');
-  client.user.setActivity('$' + lastTrade, { type: 'PLAYING' });
+  client.user.setActivity('the long game', { type: 'PLAYING' });
   watch();
 });
 
