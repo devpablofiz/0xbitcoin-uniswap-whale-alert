@@ -1,5 +1,7 @@
 module.exports.uniV3Address = "0xaFF587846a44aa086A6555Ff69055D3380fD379a"; //the address of the liquidity pool you wish to track (0xaFF587846a44aa086A6555Ff69055D3380fD379a -> 0xBTC / wETH UniswapV3)
 module.exports.uniV2Address = "0xc12c4c3E0008B838F75189BFb39283467cf6e5b3";
+module.exports.uniV3USDCAddress = "0xc01435E578eb3182cABE05F11DB2bEa493dbe7CA"; 
+
 module.exports.blockStep = 2; //blocks to process per cycle
 module.exports.blockTimeMS = 13230; //average time before an ethereum block is mined
 module.exports.alchemyKey = "keyhere"; //alchemy https://dashboard.alchemyapi.io/
@@ -8,7 +10,7 @@ module.exports.minArbMargin = 0.005; //USD threshold value of the trade
 module.exports.eventsBackupFile = "eventsBackup.csv"; //file to backup events to
 module.exports.latestBlockBackupFile = "blockBackup.txt"; //file to backup latest block processed
 module.exports.twitterAPIBearer = "keyhere";
-module.exports.discordChannel = '412483801265078273'; //channel to post in (412483801265078273 is 0xbtc's trade channel)
+module.exports.discordChannel = '543035740318203909'; //channel to post in (412483801265078273 is 0xbtc's trade channel)
 module.exports.lastTradeBackupFile = "tradeBackup.txt";
 
 module.exports.twitterConfig = {  

@@ -6,7 +6,7 @@ const colors = require("colors");
 const fs = require('fs');
 const { BigNumber } = require("ethers");
 const Discord = require("discord.js");
-const { uniV3Address, uniV2Address, blockStep, blockTimeMS, alchemyKey, minValueForAlert, uniV3Abi, uniV2Abi, latestBlockBackupFile, eventsBackupFile, twitterConfig, discordChannel, lastTradeBackupFile, minArbMargin } = require("./config.js");
+const { uniV3Address, uniV2Address, blockStep, blockTimeMS, alchemyKey, minValueForAlert, uniV3Abi, uniV2Abi, latestBlockBackupFile, eventsBackupFile, twitterConfig, discordChannel, lastTradeBackupFile, minArbMargin, uniV3USDCAddress } = require("./config.js");
 const twitter = require('twitter-lite');
 const ee = require("./botconfig/embed.json");
 const { MessageEmbed } = require("discord.js");
@@ -41,9 +41,11 @@ const provider = new AlchemyProvider("homestead", alchemyKey);
 
 const uniV3 = new Contract(uniV3Address, uniV3Abi, provider);
 const uniV2 = new Contract(uniV2Address, uniV2Abi, provider);
+const uniV3USDC = new Contract(uniV3USDCAddress, uniV3Abi, provider);
 
 let v3swapFilter = uniV3.filters.Swap();
 let v2swapFilter = uniV2.filters.Swap();
+let v3USDCswapFilter = uniV3USDC.filters.Swap();
 
 //last block synced
 let syncBlock;
@@ -141,6 +143,8 @@ const watch = async () => {
       sleep(100);
       let v3events = await uniV3.queryFilter(v3swapFilter, syncBlock, nextSyncBlock);
       sleep(100);
+      let v3USDCevents = await uniV3USDC.queryFilter(v3USDCswapFilter, syncBlock, nextSyncBlock);
+      sleep(100);
 
 
       /**
@@ -171,6 +175,15 @@ const watch = async () => {
               //its a buy
               v2swap = { amount0: (BigNumber.from(v2event.args.amount0Out) / Math.pow(10, 8) * -1).toFixed(2), amount1: (BigNumber.from(v2event.args.amount1In) / Math.pow(10, 18)).toFixed(5) }
             }
+            
+            for (const v3event of v3USDCevents) {
+              const v3USDCswap = { amount1: (BigNumber.from(event.args.amount0) / Math.pow(10, 6)).toFixed(2), amount0: (BigNumber.from(event.args.amount1) / Math.pow(10, 8)).toFixed(2) }
+
+              if (toPositive(v2swap.amount0) == toPositive(v3USDCswap.amount0) && v3event.transactionHash == v2event.transactionHash) {
+                isArb = true;
+                arbs.push(event.transactionHash);
+              }
+            }
 
             if (toPositive(v2swap.amount0) == toPositive(swap.amount0) && v2event.transactionHash == event.transactionHash) {
               isArb = true;
@@ -180,6 +193,15 @@ const watch = async () => {
               } else {
                 margin = toPositive(swap.amount1) - toPositive(v2swap.amount1);
               }
+            }
+          }
+
+          for (const v3event of v3USDCevents) {
+            const v3USDCswap = { amount1: (BigNumber.from(event.args.amount0) / Math.pow(10, 6)).toFixed(2), amount0: (BigNumber.from(event.args.amount1) / Math.pow(10, 8)).toFixed(2) }
+
+            if (toPositive(swap.amount0) == toPositive(v3USDCswap.amount0) && v3event.transactionHash == event.transactionHash) {
+              isArb = true;
+              arbs.push(event.transactionHash);
             }
           }
 
@@ -361,6 +383,90 @@ const watch = async () => {
                 .setFooter(ee.footertext, ee.footericon)
                 .setTitle(`:whale: New Uniswap V2 Trade :whale: `)
                 .setDescription("[" + ((ensName) ? ensName : account.substring(0, 8)) + "](" + baseAccountLink + account + ") Bought " + (swap.amount0 * -1) + " **0xBTC** for " + swap.amount1 + " **ETH** (Trade value: $" + ethValue + ") \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
+              )
+            } catch (e) {
+              console.log(String(e.stack).bgRed)
+              message.channel.send(new MessageEmbed()
+                .setColor(ee.wrongcolor)
+                .setFooter(ee.footertext, ee.footericon)
+                .setTitle(`❌ ERROR | An error occurred`)
+                .setDescription(`\`\`\`${e.stack}\`\`\``)
+              );
+            }
+          }
+        }
+      }
+
+      /**
+       * V3 USDC EVENTS
+       */
+       for (const event of v3USDCevents) {
+        if (event.event == "Swap" && !arbs.includes(event.transactionHash)) {
+
+          const swap = { amount1: (BigNumber.from(event.args.amount0) / Math.pow(10, 6)).toFixed(2), amount0: (BigNumber.from(event.args.amount1) / Math.pow(10, 8)).toFixed(2) }
+
+          let ethValue = toPositive(swap.amount1)
+          console.log("Swap found, value $" + ethValue);
+
+          saveEvent(date, "SWAPv2", swap.amount0, swap.amount1);
+          console.log("Saved to eventsBackup");
+
+          let txn = await event.getTransactionReceipt();
+          let account = txn.from;
+          let ensName = await provider.lookupAddress(account);
+
+          //console.log(account);
+          if (ethValue < minValueForAlert) {
+            break;
+          }
+
+          if (swap.amount0 > 0 && ethValue > minValueForAlert) {
+            console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Swap found: Sold " + swap.amount0 + " 0xBTC for " + (swap.amount1 * -1) + " USDC ($" + ethValue + ")");
+
+            try {
+              let status = "🐳 " + ((ensName) ? ensName : account.substring(0, 8)) + " Sold " + swap.amount0 + " #0xBTC for " + (swap.amount1 * -1) + " #USDC (Trade value: $" + ethValue + ") \n" + baseLink + event.transactionHash;
+
+              await twitterClient.post('statuses/update', { status: status }).then(result => {
+                console.log('[INFO] You successfully tweeted this : "' + result.text + '"');
+              })
+            } catch (e) {
+              console.log(e)
+            }
+
+            try {
+              channel.send(new MessageEmbed()
+                .setColor(ee.color)
+                .setFooter(ee.footertext, ee.footericon)
+                .setTitle(`:whale: New Uniswap V3 Trade :whale: `)
+                .setDescription("[" + ((ensName) ? ensName : account.substring(0, 8)) + "](" + baseAccountLink + account + ") Sold " + swap.amount0 + " **0xBTC** for " + (swap.amount1 * -1).toFixed(2) + " **USDC** (Trade value: $" + ethValue + ") \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
+              )
+            } catch (e) {
+              console.log(String(e.stack).bgRed)
+              channel.send(new MessageEmbed()
+                .setColor(ee.wrongcolor)
+                .setFooter(ee.footertext, ee.footericon)
+                .setTitle(`❌ ERROR | An error occurred`)
+                .setDescription(`\`\`\`${e.stack}\`\`\``)
+              );
+            }
+          } else if(ethValue > minValueForAlert) {
+            console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Swap found: Bought " + (swap.amount0 * -1) + " 0xBTC for " + swap.amount1 + " USDC ($" + ethValue + ")");
+
+            try {
+              let status = "🐳 " + ((ensName) ? ensName : account.substring(0, 8)) + " Bought " + (swap.amount0 * -1) + " #0xBTC for " + swap.amount1 + " #USDC (Trade value: $" + ethValue + ") \n" + baseLink + event.transactionHash;
+              await twitterClient.post('statuses/update', { status: status }).then(result => {
+                console.log('[INFO] You successfully tweeted this : "' + result.text + '"');
+              })
+            } catch (e) {
+              console.log(e)
+            }
+
+            try {
+              channel.send(new MessageEmbed()
+                .setColor(ee.color)
+                .setFooter(ee.footertext, ee.footericon)
+                .setTitle(`:whale: New Uniswap V3 Trade :whale: `)
+                .setDescription("[" + ((ensName) ? ensName : account.substring(0, 8)) + "](" + baseAccountLink + account + ") Bought " + (swap.amount0 * -1) + " **0xBTC** for " + (swap.amount1*1).toFixed(2) + " **USDC** (Trade value: $" + ethValue + ") \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
               )
             } catch (e) {
               console.log(String(e.stack).bgRed)
