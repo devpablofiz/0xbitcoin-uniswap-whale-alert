@@ -1,6 +1,8 @@
 module.exports.uniV3Address = "0xaFF587846a44aa086A6555Ff69055D3380fD379a"; //the address of the liquidity pool you wish to track (0xaFF587846a44aa086A6555Ff69055D3380fD379a -> 0xBTC / wETH UniswapV3)
 module.exports.uniV2Address = "0xc12c4c3E0008B838F75189BFb39283467cf6e5b3";
 module.exports.uniV3USDCAddress = "0xc01435E578eb3182cABE05F11DB2bEa493dbe7CA"; 
+module.exports.uniV3WBTCAddress = "0x87be79368f9898db7c1a7e411b1104bca5c5c2f2"; 
+
 
 module.exports.blockStep = 2; //blocks to process per cycle
 module.exports.blockTimeMS = 13230; //average time before an ethereum block is mined
