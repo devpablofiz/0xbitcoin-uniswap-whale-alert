@@ -1,0 +1,101 @@
+// '0xBitcoin Token' contract
+// Mineable ERC20 Token using Proof Of Work
+// Contract function to receive approval and execute function in one call
+// Borrowed from MiniMeToken	
+// Owned contract
+//a little number
+//a big number is easier ; just find a solution that is smaller
+//uint public  _MAXIMUM_TARGET = 2  224;  bitcoin uses 224
+//generate a new one when a new reward is minted
+// Constructor
+//The owner gets nothing! You must mine this ERC20 token
+//the PoW must contain work that includes a recent ethereum block hash (challenge number) and the msg.sender's address to prevent MITM attacks
+//the challenge digest must match the expected
+//the digest must be smaller than the target
+//only allow one reward for each challenge
+//prevent the same answer from awarding twice
+//Cannot mint more tokens than there are
+//set readonly diagnostics data
+//a new 'block' to be mined
+//if max supply for the era will be exceeded next reward round then enter the new era before that happens
+//40 is the final reward era, almost all tokens minted
+//once the final era is reached, more tokens will not be given out because the assert function
+//set the next minted supply at which the era will change
+// total supply is 2100000000000000  because of 8 decimal places
+//every so often, readjust difficulty. Dont readjust when deploying
+//make the latest ethereum block hash a part of the next challenge for PoW to prevent pre-mining future blocks
+//do this last since this is a protection mechanism in the mint() function
+//https://en.bitcoin.it/wiki/Difficulty#What_is_the_formula_for_difficulty.3F
+//as of 2017 the bitcoin difficulty was up to 17 zeroes, it was only 8 in the early days
+//readjust the target by 5 percent
+//assume 360 ethereum blocks per hour
+//we want miners to spend 10 minutes to mine each 'block', about 60 ethereum blocks = one 0xbitcoin epoch
+//256
+//should be 60 times slower than ethereum
+//if there were less eth blocks passed in time than expected
+// If there were 5% more blocks mined than expected then this is 5.  If there were 100% more blocks mined than expected then this is 100.
+//make it harder
+//by up to 50 %
+//always between 0 and 1000
+//make it easier
+//by up to 50 %
+//very difficult
+//very easy
+//this is a recent ethereum block hash, used to prevent pre-mining future blocks
+//the number of zeroes the digest of the PoW solution requires.  Auto adjusts
+//21m coins total
+//reward begins at 50 and is cut in half every reward era (as tokens are mined)
+//once we get half way thru the coins, only get 25 per block
+//every reward era, the reward amount halves.
+//help debug mining software
+// Total supply
+// Get the token balance for account `tokenOwner`
+// Transfer the balance from token owner's account to `to` account
+// - Owner's account must have sufficient balance to transfer
+// - 0 value transfers are allowed
+// Token owner can approve for `spender` to transferFrom(...) `tokens`
+// from the token owner's account
+// https://github.com/ethereum/EIPs/blob/master/EIPS/eip-20-token-standard.md
+// recommends that there are no checks for the approval double-spend attack
+// as this should be implemented in user interfaces
+// Transfer `tokens` from the `from` account to the `to` account
+// The calling account must already have sufficient tokens approve(...)-d
+// for spending from the `from` account and
+// - From account must have sufficient balance to transfer
+// - Spender must have sufficient allowance to transfer
+// - 0 value transfers are allowed
+// Returns the amount of tokens approved by the owner that can be
+// transferred to the spender's account
+// Token owner can approve for `spender` to transferFrom(...) `tokens`
+// from the token owner's account. The `spender` contract function
+// `receiveApproval(...)` is then executed
+// Don't accept ETH 
+// Owner can transfer out any accidentally sent ERC20 tokens
+// Canoe
+Hello, I'm the developer.  As far as anything is concerned technically it's a decentralized token so I shouldnt be the 'controller' just like vitalik should be the dictator of ethereum -- and he isn't :D everyone owns 0xbitcoin just as much as I do 
+For sure. Okay thanks 
+Cool! Yes I wish I could find the quote of vitalik telling creators of other coins that be could literally create their coin within ethereum - well he was right and now bitcoins been done (about as faithfully as it can get) 
+Ethereum will dominate 
+Ooo 
+The difficulty will double sooon 
+No there's no kill function 
+It's not hard to code a GPU miner 
+I wrote up a roadmap 
+Oooo I'm on Linux 
+Ooo how do I reproduce 
+Oh that's a fantastic idea 
+websockets 
+its a big ol nodejs app 
+somebody should make a gambling/game dapp where it uses 0xbitcoin instead of ether 
+0xBitcoin is directly competing against Ether as a decentralized payment mechanism on Ethereum. The Ether team wants tokens like 0xBitcoin to be better currency and Ether.   
+0xbitcoin has essentially the same form and function and shape as Bitcoin 
+0xbitcoin is 'pure' and actually completely unenforceable by governments - unlike 99 percent of tokens it's invulnerable as it's endpoints are decentralized and itself is decentralized 
+Every coin has people who are for it and those who are against it. I will tell that to a lawyer. Bitcoin is traded on an exchange and its a commodity. Read about the Howie test. There are no investors into any organization therefore it cannot be a security. In fact, there is no organization behind 0xBitcoin at all. There is nobody to talk to a lawyer. Nobody 'controls' or 'has authority' over 0xBitcoin. There is no com 
+Maybe lol.  Basically one of 0xbitcoins advantages vs Bitcoin is that it can be traded on decentralized exchanges  
+Also... I see 0xbitcoin as the best candidate for the first token that Coinbase adds 
+But the reasoning is sound.  0xbitcoin is the first decentralized token and the token most similar to a commodity 
+Then when humanity invented Erc20 tokens we regressed and went back to a centralized silo control model for the tokens until 2018 when 0xbitcoin was invented, showing everyone how you can keep tokens decentralized 
+I should make a 0xbitcoin sticker store 
+0xBitcoin runs on Ethereum 
+Yes 0xbitcoin is attempting to emulate the true Bitcoin philosophy and culture.  Not be a fake/cheap knockoff like the other tokens.  Furthermore this means that it has to be inherently trustless.  You do not have to trust me at all.  
+0xbitcoin is upgraded by building smart contracts that do stuff with it
