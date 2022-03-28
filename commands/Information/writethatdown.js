@@ -13,7 +13,7 @@ function getRandomLine(filename) {
 module.exports = {
     name: "writethatdown",
     category: "Information",
-    aliases: ["writethatdown"],
+    aliases: ["writedown"],
     cooldown: 2,
     usage: "writethatdown",
     description: "Adds to the words of wisdom",
@@ -21,7 +21,7 @@ module.exports = {
         try {
 
             if (!message.reference){
-                return message.channel.send(new MessageEmbed()
+                return message.lineReplyNoMention(new MessageEmbed()
                     .setColor(ee.wrongcolor)
                     .setFooter(ee.footertext, ee.footericon)
                     .setTitle(`❌ ERROR | Must be a reply to the wise words`)
@@ -32,7 +32,7 @@ module.exports = {
 
             //if the sender is not apexmfer.eth
             if(repliedTo.author.id !== "219123933767532544"){
-                return message.channel.send(new MessageEmbed()
+                return message.lineReplyNoMention(new MessageEmbed()
                     .setColor(ee.color)
                     .setFooter(ee.footertext, ee.footericon)
                     .setTitle(`These words were not spoken by the Deployer`)
@@ -42,7 +42,7 @@ module.exports = {
 
             var stream = fs.createWriteStream("./botconfig/comments.txt", {flags:'a'});
             stream.write(repliedTo.content+"\n")
-            message.channel.send(new MessageEmbed()
+            message.lineReplyNoMention(new MessageEmbed()
                 .setColor(ee.color)
                 .setFooter(ee.footertext, ee.footericon)
                 .setTitle(`These incredibly wise words have been written down`)
@@ -50,7 +50,7 @@ module.exports = {
             );
         } catch (e) {
             console.log(String(e.stack).bgRed)
-            return message.channel.send(new MessageEmbed()
+            return message.lineReplyNoMention(new MessageEmbed()
                 .setColor(ee.wrongcolor)
                 .setFooter(ee.footertext, ee.footericon)
                 .setTitle(`❌ ERROR | An error occurred`)

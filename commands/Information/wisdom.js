@@ -13,14 +13,14 @@ function getRandomLine(filename) {
 module.exports = {
     name: "wisdom",
     category: "Information",
-    aliases: ["wisdom"],
+    aliases: ["wise"],
     cooldown: 2,
     usage: "wisdom",
     description: "Gives you words of wisdom",
     run: async (client, message, args, user, text, prefix) => {
         try {
             let the_random_line_text = getRandomLine("./botconfig/comments.txt");
-            message.channel.send(new MessageEmbed()
+            message.lineReplyNoMention(new MessageEmbed()
                 .setColor(ee.color)
                 .setFooter(ee.footertext, ee.footericon)
                 .setTitle(`Words of wisdom from the Deployer`)
@@ -28,7 +28,7 @@ module.exports = {
             );
         } catch (e) {
             console.log(String(e.stack).bgRed)
-            return message.channel.send(new MessageEmbed()
+            return message.lineReplyNoMention(new MessageEmbed()
                 .setColor(ee.wrongcolor)
                 .setFooter(ee.footertext, ee.footericon)
                 .setTitle(`❌ ERROR | An error occurred`)

@@ -8,7 +8,7 @@ const captureWebsite = (...args) => import('capture-website').then(({default: ca
 module.exports = {
     name: "halvening",
     category: "Information",
-    aliases: ["halvening"],
+    aliases: ["halving"],
     cooldown: 2,
     usage: "halvening",
     description: "Sends a screenshot from halvening.0xbitcoin.xyz",
@@ -41,17 +41,16 @@ module.exports = {
         }
       });
       const file = new MessageAttachment(`local-file.png`);
-      message.channel.send(new MessageEmbed()
+      message.lineReplyNoMention(new MessageEmbed()
         .setColor(ee.color)
         .setFooter(ee.footertext, ee.footericon)
-        .setTitle(`Halvening Stats`)
         .setImage(`attachment://local-file.png`)
         .setDescription('[Go to the website](https://halvening.0xbitcoin.xyz/)')
         .attachFiles(file)
       )
     } catch (e) {
         console.log(String(e.stack).bgRed)
-        return message.channel.send(new MessageEmbed()
+        return message.lineReplyNoMention(new MessageEmbed()
             .setColor(ee.wrongcolor)
             .setFooter(ee.footertext, ee.footericon)
             .setTitle(`❌ ERROR | An error occurred`)

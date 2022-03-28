@@ -11,7 +11,7 @@ module.exports = {
     description: "Gives you information on how fast the Bot can respond to you",
     run: async (client, message, args, user, text, prefix) => {
     try{
-      message.channel.send(new MessageEmbed()
+      message.lineReplyNoMention(new MessageEmbed()
         .setColor(ee.color)
         .setFooter(ee.footertext, ee.footericon)
         .setTitle(`🏓 Pinging....`)
@@ -24,7 +24,7 @@ module.exports = {
       })
     } catch (e) {
         console.log(String(e.stack).bgRed)
-        return message.channel.send(new MessageEmbed()
+        return message.lineReplyNoMention(new MessageEmbed()
             .setColor(ee.wrongcolor)
             .setFooter(ee.footertext, ee.footericon)
             .setTitle(`❌ ERROR | An error occurred`)

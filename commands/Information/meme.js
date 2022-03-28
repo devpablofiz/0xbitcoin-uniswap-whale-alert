@@ -2,6 +2,7 @@ const { MessageEmbed, MessageAttachment } = require("discord.js");
 require('discord-reply');
 const config = require("../../botconfig/config.json");
 const ee = require("../../botconfig/embed.json");
+const fs = require('fs');
 
 const { Contract } = require("@ethersproject/contracts");
 const { AlchemyProvider } = require("@ethersproject/providers");
@@ -16,14 +17,14 @@ const baseOpenseaLink = "https://opensea.io/assets/0x6c10511ddea5f3ed38a01632241
 module.exports = {
     name: "meme",
     category: "Information",
-    aliases: ["meme"],
+    aliases: ["memes"],
     cooldown: 10,
     usage: "meme <memeID>",
     description: "Shows an image of the 0xbitcoin meme",
     run: async (client, message, args, user, text, prefix) => {
         try {
             if (!args[0]) {
-                return message.channel.send(new MessageEmbed()
+                return message.lineReplyNoMention(new MessageEmbed()
                     .setColor(ee.wrongcolor)
                     .setFooter(ee.footertext, ee.footericon)
                     .setTitle(`❌ ERROR | You didn't provide an ID`)
@@ -48,7 +49,7 @@ module.exports = {
                 
 
                 if (isNaN(id) || id > 70) {
-                    return message.channel.send(new MessageEmbed()
+                    return message.lineReplyNoMention(new MessageEmbed()
                         .setColor(ee.wrongcolor)
                         .setFooter(ee.footertext, ee.footericon)
                         .setTitle(`❌ ERROR | The ID you provided does not exist`)
@@ -62,7 +63,6 @@ module.exports = {
 
                     let ensName = await provider.lookupAddress(owner);
 
-                    let fs = require('fs');
                     let files = fs.readdirSync('./memes/')
                     let filename = "";
                     let prefix = id + ".";
@@ -76,7 +76,7 @@ module.exports = {
 
                     const file = new MessageAttachment("./memes/" + filename);
 
-                    return message.channel.send(new MessageEmbed()
+                    return message.lineReplyNoMention(new MessageEmbed()
                         .setColor(ee.color)
                         .setFooter(ee.footertext, ee.footericon)
                         .setTitle(`**0xBitcoin Meme #${id}**`)
