@@ -26,12 +26,12 @@ module.exports = {
              //console.log('file deleted successfully');
         });  
       });
-      await captureWebsite('https://halvening.0xbitcoin.xyz/','local-file.png', {
+      await captureWebsite('https://halvening.0xbitcoin.xyz/halvening','local-file.png', {
 	      delay: '7',
           width: 420,
           height: 420,
           hideElements: [
-            '#root > div > div.container',
+            '#root > div > div.container', '#background-video'
             ],
           launchOptions: {
             args: [
