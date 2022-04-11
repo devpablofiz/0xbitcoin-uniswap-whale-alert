@@ -27,7 +27,6 @@ module.exports = {
         });  
       });
       await captureWebsite('https://halvening.0xbitcoin.xyz/halvening','local-file.png', {
-	      delay: '7',
           width: 420,
           height: 420,
           hideElements: [
