@@ -26,8 +26,9 @@ module.exports = {
                 return message.lineReplyNoMention(new MessageEmbed()
                     .setColor(ee.color)
                     .setFooter(ee.footertext, ee.footericon)
-                    .setTitle(`**How to verify ownership**`)
-                    .setDescription('Browse to https://etherscan.io/verifiedSignatures **(or google "Etherscan sign message")** \n \n' +
+                    .setTitle(`**How to verify ownership of your subdomain**`)
+                    .setDescription('Purchase one of the subdomains in the [store](https://www.0xbitcoin.xyz/ens)\n \n' +
+                        'Browse to https://etherscan.io/verifiedSignatures **(or google "Etherscan sign message")** \n \n' +
                         'Click on Sign Message \n \nUnder "message to sign" insert your Discord username and tag (example: Fappablo#8171) \n \n' +
                         'Click on Sign Message, Metamask will prompt you to sign and you will see your discord username in the "message" field \n \n' +
                         'Copy the Signature Hash you received and use this command again \n \n' +
@@ -62,16 +63,16 @@ module.exports = {
                     return message.lineReplyNoMention(new MessageEmbed()
                         .setColor(ee.color)
                         .setFooter(ee.footertext, ee.footericon)
-                        .setTitle(`Verified`)
-                        .setDescription(`**ENS owner:** ${address} \n \n**User tag:** ${userTag} \n \n**Signer:** ${sigAddress}`)
+                        .setTitle(`:white_check_mark: Ownership Verified :white_check_mark: `)
+                        .setDescription(`**User tag:** ${userTag} \n \n Your roles have been updated`)
                     );
                 }else{
                     return message.lineReplyNoMention(new MessageEmbed()
                         .setColor(ee.color)
                         .setFooter(ee.footertext, ee.footericon)
-                        .setTitle(`Could not verify`)
-                        .setDescription(`**ENS owner:** ${address} \n \n**User tag:** ${userTag} \n \n**Signer:** ${sigAddress}`)
-                    ); 
+                        .setTitle(`:x: Could not verify :x:`)
+                        .setDescription(`**User tag:** ${userTag} \n \n**ENS owner:** ${address.toLowerCase()} \n**Resolved Signer:** ${sigAddress.toLowerCase()}`)
+                    );
                 }
             }
         } catch (e) {
