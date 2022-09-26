@@ -113,14 +113,6 @@ client.cooldowns = new Discord.Collection();
   require(`./handlers/${handler}`)(client);
 });
 
-let lastTrade;
-try {
-  lastTrade = parseFloat(fs.readFileSync(lastTradeBackupFile));
-  console.log("Last " + lastTrade);
-} catch (err) {
-  checkErr(err, true);
-}
-
 client.on('message', (message) => {
   const { channel } = message;
 
@@ -130,8 +122,28 @@ client.on('message', (message) => {
   }
 })
 
+client.on("debug", console.log);
+
 //login into the bot
-client.login(require("./botconfig/config.json").token);
+
+const login = async () => {
+  try {
+    await client.login(require("./botconfig/config.json").token);
+    console.log("logged in")
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+login();
+
+let lastTrade;
+try {
+  lastTrade = parseFloat(fs.readFileSync(lastTradeBackupFile));
+  console.log("Last " + lastTrade);
+} catch (err) {
+  checkErr(err, true);
+}
 
 const watch = async () => {
   while (1) {
@@ -169,12 +181,12 @@ const watch = async () => {
           let margin = 0;
           let txn = await event.getTransactionReceipt();
           let account = txn.from;
-          
+
           let ensName = await provider.lookupAddress(account);
 
           let gasUsed = txn.gasUsed;
           let gasPrice = formatEther(txn.effectiveGasPrice);
-          let txnCost = gasUsed*gasPrice
+          let txnCost = gasUsed * gasPrice
 
           const swap = { amount0: (BigNumber.from(event.args.amount0) / Math.pow(10, 8)).toFixed(2), amount1: (BigNumber.from(event.args.amount1) / Math.pow(10, 18)).toFixed(5) }
 
@@ -188,7 +200,7 @@ const watch = async () => {
               //its a buy
               v2swap = { amount0: (BigNumber.from(v2event.args.amount0Out) / Math.pow(10, 8) * -1).toFixed(2), amount1: (BigNumber.from(v2event.args.amount1In) / Math.pow(10, 18)).toFixed(5) }
             }
-            
+
             for (const v3event of v3USDCevents) {
               const v3USDCswap = { amount1: (BigNumber.from(v3event.args.amount0) / Math.pow(10, 6)).toFixed(2), amount0: (BigNumber.from(v3event.args.amount1) / Math.pow(10, 8)).toFixed(2) }
 
@@ -304,7 +316,7 @@ const watch = async () => {
                 .setDescription(`\`\`\`${e.stack}\`\`\``)
               );
             }
-          } else if(ethValue > minValueForAlert) {
+          } else if (ethValue > minValueForAlert) {
             console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Swap found: Bought " + (swap.amount0 * -1) + " 0xBTC for " + swap.amount1 + " Ether ($" + ethValue + ")");
 
             try {
@@ -321,7 +333,7 @@ const watch = async () => {
                 .setColor(ee.color)
                 .setFooter(ee.footertext, ee.footericon)
                 .setTitle(`:whale: New Uniswap V3 Trade :whale: `)
-                .setDescription("[" + ((ensName) ? ensName : account.substring(0, 8)) + "](" + baseAccountLink + account + ") Bought " + (swap.amount0 * -1) + " **0xBTC** for " + (swap.amount1*1).toFixed(2) + " **ETH** (Trade value: $" + ethValue + ") \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
+                .setDescription("[" + ((ensName) ? ensName : account.substring(0, 8)) + "](" + baseAccountLink + account + ") Bought " + (swap.amount0 * -1) + " **0xBTC** for " + (swap.amount1 * 1).toFixed(2) + " **ETH** (Trade value: $" + ethValue + ") \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
               )
             } catch (e) {
               console.log(String(e.stack).bgRed)
@@ -431,7 +443,7 @@ const watch = async () => {
       /**
        * V3 USDC EVENTS
        */
-       for (const event of v3USDCevents) {
+      for (const event of v3USDCevents) {
         if (event.event == "Swap" && !arbs.includes(event.transactionHash)) {
 
           const swap = { amount1: (BigNumber.from(event.args.amount0) / Math.pow(10, 6)).toFixed(2), amount0: (BigNumber.from(event.args.amount1) / Math.pow(10, 8)).toFixed(2) }
@@ -480,7 +492,7 @@ const watch = async () => {
                 .setDescription(`\`\`\`${e.stack}\`\`\``)
               );
             }
-          } else if(ethValue > minValueForAlert) {
+          } else if (ethValue > minValueForAlert) {
             console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Swap found: Bought " + (swap.amount0 * -1) + " 0xBTC for " + swap.amount1 + " USDC ($" + ethValue + ")");
 
             try {
@@ -497,7 +509,7 @@ const watch = async () => {
                 .setColor(ee.color)
                 .setFooter(ee.footertext, ee.footericon)
                 .setTitle(`:whale: New Uniswap V3 Trade :whale: `)
-                .setDescription("[" + ((ensName) ? ensName : account.substring(0, 8)) + "](" + baseAccountLink + account + ") Bought " + (swap.amount0 * -1) + " **0xBTC** for " + (swap.amount1*1).toFixed(2) + " **USDC** (Trade value: $" + ethValue + ") \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
+                .setDescription("[" + ((ensName) ? ensName : account.substring(0, 8)) + "](" + baseAccountLink + account + ") Bought " + (swap.amount0 * -1) + " **0xBTC** for " + (swap.amount1 * 1).toFixed(2) + " **USDC** (Trade value: $" + ethValue + ") \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
               )
             } catch (e) {
               console.log(String(e.stack).bgRed)
@@ -564,7 +576,7 @@ const watch = async () => {
                 .setDescription(`\`\`\`${e.stack}\`\`\``)
               );
             }
-          } else if(ethValue > minValueForAlert) {
+          } else if (ethValue > minValueForAlert) {
             console.log("[" + date.getHours() + ":" + date.getMinutes() + "] Swap found: Bought " + (swap.amount0 * -1) + " 0xBTC for " + swap.amount1 + " WBTC ($" + ethValue + ")");
 
             try {
@@ -581,7 +593,7 @@ const watch = async () => {
                 .setColor(ee.color)
                 .setFooter(ee.footertext, ee.footericon)
                 .setTitle(`:whale: New Uniswap V3 Trade :whale: `)
-                .setDescription("[" + ((ensName) ? ensName : account.substring(0, 8)) + "](" + baseAccountLink + account + ") Bought " + (swap.amount0 * -1) + " **0xBTC** for " + (swap.amount1*1).toFixed(2) + " **WBTC** (Trade value: $" + ethValue + ") \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
+                .setDescription("[" + ((ensName) ? ensName : account.substring(0, 8)) + "](" + baseAccountLink + account + ") Bought " + (swap.amount0 * -1) + " **0xBTC** for " + (swap.amount1 * 1).toFixed(2) + " **WBTC** (Trade value: $" + ethValue + ") \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
               )
             } catch (e) {
               console.log(String(e.stack).bgRed)
