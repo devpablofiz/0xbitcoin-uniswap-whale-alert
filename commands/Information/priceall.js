@@ -21,7 +21,7 @@ module.exports = {
             const tickers = data.data.tickers;
             let msg = "";
             for (const ticker of tickers) {
-                const toAdd = `---${ticker.market.name}--- \nPrice: $${ticker.converted_last.usd.toFixed(3)} => Ξ${ticker.converted_last.eth.toFixed(6)} \nVolume: $${ticker.volume.toFixed(0)}\n\n`;
+                const toAdd = `---${ticker.market.name}--- \nPrice: $${ticker.converted_last.usd.toFixed(3)} | Ξ${ticker.converted_last.eth.toFixed(6)} \nVolume: $${(ticker.volume * ticker.converted_last.usd).toFixed(0)}\n\n`;
                 msg += toAdd;
             }
 
