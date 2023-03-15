@@ -6,7 +6,7 @@ const colors = require("colors");
 const fs = require('fs');
 const { BigNumber } = require("ethers");
 const Discord = require("discord.js");
-const { uniV3Address, uniV2Address, blockStep, blockTimeMS, alchemyKey, minValueForAlert, uniV3Abi, uniV2Abi, latestBlockBackupFile, eventsBackupFile, twitterConfig, discordChannel, lastTradeBackupFile, minArbMargin, uniV3USDCAddress, uniV3WBTCAddress } = require("./config.js");
+const { uniV3Address, uniV2Address, memesAuctionAddress, memesNFTAddress, blockStep, blockTimeMS, alchemyKey, minValueForAlert, uniV3Abi, uniV2Abi, memesAuctionAbi, memesNFTAbi, latestBlockBackupFile, eventsBackupFile, twitterConfig, discordChannel, lastTradeBackupFile, minArbMargin, uniV3USDCAddress, uniV3WBTCAddress } = require("./config.js");
 const twitter = require('twitter-lite');
 const ee = require("./botconfig/embed.json");
 const { MessageEmbed } = require("discord.js");
@@ -43,12 +43,15 @@ const uniV3 = new Contract(uniV3Address, uniV3Abi, provider);
 const uniV2 = new Contract(uniV2Address, uniV2Abi, provider);
 const uniV3USDC = new Contract(uniV3USDCAddress, uniV3Abi, provider);
 const uniV3WBTC = new Contract(uniV3WBTCAddress, uniV3Abi, provider);
-
+const memesAuction = new Contract(memesAuctionAddress, memesAuctionAbi, provider);
+const memesNFT = new Contract(memesNFTAddress, memesNFTAbi, provider);
 
 let v3swapFilter = uniV3.filters.Swap();
 let v2swapFilter = uniV2.filters.Swap();
 let v3USDCswapFilter = uniV3USDC.filters.Swap();
 let v3WBTCswapFilter = uniV3WBTC.filters.Swap();
+let memeBuyoutFilter = memesAuction.filters.Buyout(); // event Buyout(address buyer, uint256 tokenId, uint256 price);  
+let auctionStarted = memesAuction.filters.AuctionStarted();
 
 //last block synced
 let syncBlock;
@@ -170,7 +173,46 @@ const watch = async () => {
       sleep(100);
       let v3WBTCevents = await uniV3WBTC.queryFilter(v3WBTCswapFilter, syncBlock, nextSyncBlock);
       sleep(100);
+      let memeBuyoutEvents = await memesAuction.queryFilter(memeBuyoutFilter, syncBlock, nextSyncBlock);
+      sleep(100);
+      let memeAuctionEvents = await memesAuction.queryFilter(memeBuyoutFilter, syncBlock, nextSyncBlock);
+      sleep(100);
 
+      /**
+       * MEMES EVENTS
+      */
+
+      for (const event of memeBuyoutEvents) { //event Buyout(address buyer, uint256 tokenId, uint256 price);  
+        if (event.event !== "Buyout") {
+          break;
+        }
+
+        const txn = await event.getTransactionReceipt();
+        const account = txn.from;
+        const ensName = await provider.lookupAddress(account);
+
+        const buyout = { buyer: event.args.buyer, tokenId: parseInt(event.args.tokenId), price: (BigNumber.from(event.args.amount0) / Math.pow(10, 8)) }
+        saveEvent(date, "BUYOUT", buyout.tokenId, buyout.price);
+        const uriExtension = await contract.uriExtensions(id).catch((err) => console.log(err));
+        const metadata = await fetch(`https://arweave.net/${uriExtension}`).then(res => res.json());
+        try {
+          channel.send(new MessageEmbed()
+            .setColor(ee.color)
+            .setFooter(ee.footertext, ee.footericon)
+            .setTitle(`:Coins_detail:  Meme #${buyout.tokenId} buyout :Coins_detail:  `)
+            .setDescription("[" + ((ensName) ? ensName : account.substring(0, 8)) + "](" + baseAccountLink + account + ") Purchased meme #" + buyout.tokenId + " for " + buyout.price + " **0xBTC** \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
+            .setImage(metadata.image)
+          )
+        } catch (e) {
+          console.log(String(e.stack).bgRed)
+          channel.send(new MessageEmbed()
+            .setColor(ee.wrongcolor)
+            .setFooter(ee.footertext, ee.footericon)
+            .setTitle(`❌ ERROR | An error occurred`)
+            .setDescription(`\`\`\`${e.stack}\`\`\``)
+          );
+        }
+      }
 
       /**
        *  V3 EVENTS
