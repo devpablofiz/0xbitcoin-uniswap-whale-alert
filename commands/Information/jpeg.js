@@ -42,7 +42,7 @@ module.exports = {
                 return message.lineReplyNoMention(new MessageEmbed()
                     .setColor(ee.color)
                     .setFooter(ee.footertext, ee.footericon)
-                    .setTitle(`**Current buyout for 0xJPEG #${mintedTokenCount}** is ${(BigNumber.from(price) / Math.pow(10, 8)).toString().replace(/(.)(?=(\d{3})+$)/g,'$1,')} 0xBTC`)
+                    .setTitle(`**Current buyout for 0xJPEG #${mintedTokenCount}** is ${((price / Math.pow(10, 8)).toFixed(0)).toString().replace(/(.)(?=(\d{3})+$)/g, '$1,')} 0xBTC`)
                     .setDescription("[View Auction]( https://0xjpegs.com/ )")
                     .setImage(metadata.image)
                 )
