@@ -4,13 +4,15 @@ const config = require("../../botconfig/config.json");
 const ee = require("../../botconfig/embed.json");
 const fs = require('fs');
 const fetch = require("node-fetch");
+const { BigNumber } = require("ethers");
 
 const { Contract } = require("@ethersproject/contracts");
 const { AlchemyProvider } = require("@ethersproject/providers");
-const { memesNFTAddress, memesNFTAbi } = require("../../config.js");
+const { memesNFTAddress, memesAuctionAddress, memesNFTAbi, memesAuctionAbi } = require("../../config.js");
 
 const provider = new AlchemyProvider("homestead", config.alchemyKey);
-const contract = new Contract(memesNFTAddress, memesNFTAbi, provider);
+const nftContract = new Contract(memesNFTAddress, memesNFTAbi, provider);
+const auctionContract = new Contract(memesAuctionAddress, memesAuctionAbi, provider);
 
 const baseEtherscanLink = "https://etherscan.io/address/";
 const baseOpenseaLink = "https://opensea.io/assets/0xabdFb5eb2ac4d43dC18d8253494A6002A363effd/";
@@ -31,6 +33,19 @@ module.exports = {
                     .setTitle(`❌ ERROR | You didn't provide an ID`)
                     .setDescription(`Usage: \`${prefix}${this.usage}\``)
                 );
+            } else if (args[0] === "price") {
+                const mintedTokenCount = await nftContract.mintedTokenCount().catch((err) => console.log(err));
+                const blockNum = await provider.getBlockNumber();
+                const price = await auctionContract.getMintPrice(blockNum);
+                const uriExtension = await nftContract.uriExtensions(mintedTokenCount).catch((err) => console.log(err));
+                const metadata = await fetch(`https://arweave.net/${uriExtension}`).then(res => res.json());
+                return message.lineReplyNoMention(new MessageEmbed()
+                    .setColor(ee.color)
+                    .setFooter(ee.footertext, ee.footericon)
+                    .setTitle(`**Current buyout for 0xJPEG #${mintedTokenCount}** is ${(BigNumber.from(price) / Math.pow(10, 8)).toString().replace(/(.)(?=(\d{3})+$)/g,'$1,')} 0xBTC`)
+                    .setDescription("[View Auction]( https://0xjpegs.com/ )")
+                    .setImage(metadata.image)
+                )
             } else {
                 let id = args[0];
 
@@ -40,7 +55,7 @@ module.exports = {
                     const address = await provider.resolveName(id);
 
                     if (address) {
-                        const bal = await contract
+                        const bal = await nftContract
                             .balanceOf(address)
                             .catch((err) => console.log(err)
                             );
@@ -52,7 +67,7 @@ module.exports = {
                                 .setDescription(`Usage: \`${prefix}${this.usage}\``)
                             );
                         }
-                        id = await contract.tokenOfOwnerByIndex(address, Math.floor(Math.random() * bal))
+                        id = await nftContract.tokenOfOwnerByIndex(address, Math.floor(Math.random() * bal))
                     }
                 }
 
@@ -64,12 +79,12 @@ module.exports = {
                         .setDescription(`Usage: \`${prefix}${this.usage}\``)
                     );
                 } else {
-                    const owner = await contract
+                    const owner = await nftContract
                         .ownerOf(id)
                         .catch((err) => console.log("Couldnt fetch ownerOf in jpeg.js"));
                     let ensName;
 
-                    const uriExtension = await contract.uriExtensions(id).catch((err) => console.log(err));
+                    const uriExtension = await nftContract.uriExtensions(id).catch((err) => console.log(err));
                     const metadata = await fetch(`https://arweave.net/${uriExtension}`).then(res => res.json());
 
                     if (owner) {
