@@ -175,8 +175,6 @@ const watch = async () => {
       sleep(100);
       let memeBuyoutEvents = await memesAuction.queryFilter(memeBuyoutFilter, syncBlock, nextSyncBlock);
       sleep(100);
-      let memeAuctionEvents = await memesAuction.queryFilter(memeBuyoutFilter, syncBlock, nextSyncBlock);
-      sleep(100);
 
       /**
        * MEMES EVENTS
@@ -193,7 +191,7 @@ const watch = async () => {
 
         const buyout = { buyer: event.args.buyer, tokenId: parseInt(event.args.tokenId), price: (BigNumber.from(event.args.amount0) / Math.pow(10, 8)) }
         saveEvent(date, "BUYOUT", buyout.tokenId, buyout.price);
-        const uriExtension = await contract.uriExtensions(id).catch((err) => console.log(err));
+        const uriExtension = await memesNFT.uriExtensions(id).catch((err) => console.log(err));
         const metadata = await fetch(`https://arweave.net/${uriExtension}`).then(res => res.json());
         try {
           channel.send(new MessageEmbed()
