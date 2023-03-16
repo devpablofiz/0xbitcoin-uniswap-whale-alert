@@ -11,6 +11,7 @@ const twitter = require('twitter-lite');
 const ee = require("./botconfig/embed.json");
 const { MessageEmbed } = require("discord.js");
 const CoinGecko = require('coingecko-api');
+const fetch = require("node-fetch");
 
 const baseLink = "https://etherscan.io/tx/"
 const baseAccountLink = "https://etherscan.io/address/"
@@ -189,15 +190,15 @@ const watch = async () => {
         const account = txn.from;
         const ensName = await provider.lookupAddress(account);
 
-        const buyout = { buyer: event.args.buyer, tokenId: parseInt(event.args.tokenId), price: (BigNumber.from(event.args.amount0) / Math.pow(10, 8)) }
+        const buyout = { buyer: event.args.buyer, tokenId: parseInt(event.args.tokenId), price: (BigNumber.from(event.args.price) / Math.pow(10, 8)).toFixed(0) }
         saveEvent(date, "BUYOUT", buyout.tokenId, buyout.price);
-        const uriExtension = await memesNFT.uriExtensions(id).catch((err) => console.log(err));
+        const uriExtension = await memesNFT.uriExtensions(buyout.tokenId).catch((err) => console.log(err));
         const metadata = await fetch(`https://arweave.net/${uriExtension}`).then(res => res.json());
         try {
           channel.send(new MessageEmbed()
             .setColor(ee.color)
             .setFooter(ee.footertext, ee.footericon)
-            .setTitle(`:Coins_detail:  Meme #${buyout.tokenId} buyout :Coins_detail:  `)
+            .setTitle(`:rocket:  Meme #${buyout.tokenId} buyout :rocket:  `)
             .setDescription("[" + ((ensName) ? ensName : account.substring(0, 8)) + "](" + baseAccountLink + account + ") Purchased meme #" + buyout.tokenId + " for " + buyout.price + " **0xBTC** \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
             .setImage(metadata.image)
           )

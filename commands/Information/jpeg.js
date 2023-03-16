@@ -50,7 +50,7 @@ module.exports = {
                 let id = args[0];
 
                 if (id == "?") {
-                    id = Math.floor(Math.random() * 30) + 1;
+                    id = Math.floor(Math.random() * 59) + 1;
                 } else if (isNaN(id)) {
                     const address = await provider.resolveName(id);
 
@@ -71,7 +71,7 @@ module.exports = {
                     }
                 }
 
-                if (isNaN(id) || id > 30) {
+                if (isNaN(id) || id > 59) {
                     return message.lineReplyNoMention(new MessageEmbed()
                         .setColor(ee.wrongcolor)
                         .setFooter(ee.footertext, ee.footericon)
