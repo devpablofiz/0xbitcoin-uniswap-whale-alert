@@ -194,13 +194,15 @@ const watch = async () => {
         saveEvent(date, "BUYOUT", buyout.tokenId, buyout.price);
         const uriExtension = await memesNFT.uriExtensions(buyout.tokenId).catch((err) => console.log(err));
         const metadata = await fetch(`https://arweave.net/${uriExtension}`).then(res => res.json());
+        const file = new MessageAttachment("./0xjpegs/" + metadata.name);
         try {
           channel.send(new MessageEmbed()
             .setColor(ee.color)
             .setFooter(ee.footertext, ee.footericon)
-            .setTitle(`:rocket:  Meme #${buyout.tokenId} buyout :rocket:  `)
+            .setTitle(`:rocket:  Meme #${buyout.tokenId} buyout  :rocket:  `)
             .setDescription("[" + ((ensName) ? ensName : account.substring(0, 8)) + "](" + baseAccountLink + account + ") Purchased meme #" + buyout.tokenId + " for " + buyout.price + " **0xBTC** \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
-            .setImage(metadata.image)
+            .setImage(`attachment://${metadata.name}`)
+            .attachFiles(file)
           )
         } catch (e) {
           console.log(String(e.stack).bgRed)

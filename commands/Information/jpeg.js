@@ -39,12 +39,15 @@ module.exports = {
                 const price = await auctionContract.getMintPrice(blockNum);
                 const uriExtension = await nftContract.uriExtensions(mintedTokenCount).catch((err) => console.log(err));
                 const metadata = await fetch(`https://arweave.net/${uriExtension}`).then(res => res.json());
+                const file = new MessageAttachment("./0xjpegs/" + metadata.name);
+
                 return message.lineReplyNoMention(new MessageEmbed()
                     .setColor(ee.color)
                     .setFooter(ee.footertext, ee.footericon)
                     .setTitle(`**Current buyout for 0xJPEG #${mintedTokenCount}** is ${((price / Math.pow(10, 8)).toFixed(0)).toString().replace(/(.)(?=(\d{3})+$)/g, '$1,')} 0xBTC`)
                     .setDescription("[View Auction]( https://0xjpegs.com/ )")
-                    .setImage(metadata.image)
+                    .setImage(`attachment://${metadata.name}`)
+                    .attachFiles(file)
                 )
             } else {
                 let id = args[0];
@@ -87,6 +90,8 @@ module.exports = {
                     const uriExtension = await nftContract.uriExtensions(id).catch((err) => console.log(err));
                     const metadata = await fetch(`https://arweave.net/${uriExtension}`).then(res => res.json());
 
+                    const file = new MessageAttachment("./0xjpegs/" + metadata.name);
+
                     if (owner) {
                         ensName = await provider.lookupAddress(owner).catch(err => console.log(err));
                         return message.lineReplyNoMention(new MessageEmbed()
@@ -95,7 +100,8 @@ module.exports = {
                             .setTitle(`**0xJPEG #${id}**`)
                             .setDescription(`Owned by [` + (ensName ? ensName : owner.substring(0, 8)) + "](" + baseEtherscanLink + owner + ") \n"
                                 + "[Opensea](" + baseOpenseaLink + id + ")")
-                            .setImage(metadata.image)
+                            .setImage(`attachment://${metadata.name}`)
+                            .attachFiles(file)
                         )
                     } else {
                         return message.lineReplyNoMention(new MessageEmbed()
@@ -103,7 +109,8 @@ module.exports = {
                             .setFooter(ee.footertext, ee.footericon)
                             .setTitle(`**0xJPEG #${id}**`)
                             .setDescription(`This 0xJPEG has yet to be minted`)
-                            .setImage(metadata.image)
+                            .setImage(`attachment://${metadata.name}`)
+                            .attachFiles(file)
                         )
                     }
 
