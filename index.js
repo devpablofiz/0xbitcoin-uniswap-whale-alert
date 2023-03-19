@@ -9,7 +9,7 @@ const Discord = require("discord.js");
 const { uniV3Address, uniV2Address, memesAuctionAddress, memesNFTAddress, blockStep, blockTimeMS, alchemyKey, minValueForAlert, uniV3Abi, uniV2Abi, memesAuctionAbi, memesNFTAbi, latestBlockBackupFile, eventsBackupFile, twitterConfig, discordChannel, lastTradeBackupFile, minArbMargin, uniV3USDCAddress, uniV3WBTCAddress } = require("./config.js");
 const twitter = require('twitter-lite');
 const ee = require("./botconfig/embed.json");
-const { MessageEmbed } = require("discord.js");
+const { MessageEmbed,MessageAttachment } = require("discord.js");
 const CoinGecko = require('coingecko-api');
 const fetch = require("node-fetch");
 
@@ -199,8 +199,8 @@ const watch = async () => {
           channel.send(new MessageEmbed()
             .setColor(ee.color)
             .setFooter(ee.footertext, ee.footericon)
-            .setTitle(`:rocket:  Meme #${buyout.tokenId} buyout  :rocket:  `)
-            .setDescription("[" + ((ensName) ? ensName : account.substring(0, 8)) + "](" + baseAccountLink + account + ") Purchased meme #" + buyout.tokenId + " for " + buyout.price + " **0xBTC** \n \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
+            .setTitle(`:rocket:  Auction for 0xJPEG #${buyout.tokenId} has ended!  :rocket:  `)
+            .setDescription("[" + ((ensName) ? ensName : account.substring(0, 8)) + "](" + baseAccountLink + account + ") purchased meme #" + buyout.tokenId + " for " + buyout.price + " **0xBTC** \n" + "[View Txn](" + baseLink + event.transactionHash + ")")
             .setImage(`attachment://${metadata.name}`)
             .attachFiles(file)
           )
