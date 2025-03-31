@@ -2,7 +2,7 @@ const { MessageEmbed, MessageAttachment } = require("discord.js");
 require('discord-reply');
 var fs = require('fs');
 const config = require("../../botconfig/config.json");
-const CoinGecko = require('coingecko-api');
+const { CoinGeckoClient } = require('coingecko-api-v3');
 const ee = require("../../botconfig/embed.json");
 
 module.exports = {
@@ -16,19 +16,16 @@ module.exports = {
         try {
 
             //2. Initiate the CoinGecko API Client
-            const CoinGeckoClient = new CoinGecko();
-            const data = await CoinGeckoClient.coins.fetch('oxbitcoin', { market_data: false, community_data: false, developer_data: false, localization: false, sparkline: false });
-            const tickers = data.data.tickers;
-            let msg = "";
-            for (const ticker of tickers) {
-                const toAdd = `---${ticker.market.name}--- \nPrice: $${ticker.converted_last.usd.toFixed(3)} | Ξ${ticker.converted_last.eth.toFixed(6)} \nVolume: $${(ticker.volume * ticker.converted_last.usd).toFixed(0)}\n\n`;
-                msg += toAdd;
-            }
+            const coinGecko = new CoinGeckoClient({
+  timeout: 10000,
+  autoRetry: true,
+});
+            const data = await coinGecko.simplePrice({vs_currencies:"usd",ids:"oxbitcoin"});
 
             message.lineReplyNoMention(new MessageEmbed()
                 .setColor(ee.color)
                 .setFooter(ee.footertext, ee.footericon)
-                .setDescription('```' + msg + '```')
+                .setDescription('``` $' + data.oxbitcoin.usd.toFixed(3) + '```')
             );
 
         } catch (e) {

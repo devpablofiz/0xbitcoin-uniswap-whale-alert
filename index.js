@@ -10,13 +10,17 @@ const { uniV3Address, uniV2Address, memesAuctionAddress, memesNFTAddress, blockS
 const twitter = require('twitter-lite');
 const ee = require("./botconfig/embed.json");
 const { MessageEmbed,MessageAttachment } = require("discord.js");
-const CoinGecko = require('coingecko-api');
+const { CoinGeckoClient } = require('coingecko-api-v3');
 const fetch = require("node-fetch");
 
 const baseLink = "https://etherscan.io/tx/"
 const baseAccountLink = "https://etherscan.io/address/"
 
-const CoinGeckoClient = new CoinGecko();
+const coinGecko = new CoinGeckoClient({
+  timeout: 10000,
+  autoRetry: true,
+});
+
 const twitterClient = new twitter(twitterConfig);
 
 function appendFile(filePath, data) {
@@ -81,18 +85,14 @@ function toPositive(value) {
 
 async function getEthValue(amountETH) {
   let realAmount = toPositive(amountETH);
-  const ethData = await CoinGeckoClient.coins.fetch('ethereum', {});
-  const ethUsdPrice = ethData.data.market_data.current_price.usd;
-
-  return (realAmount * ethUsdPrice).toFixed(0);
+  const ethUsdPrice = await coinGecko.simplePrice({vs_currencies:"usd",ids:"ethereum"});
+  return (realAmount * ethUsdPrice.ethereum.usd).toFixed(0);
 }
 
 async function getBTCValue(amountBTC) {
   let realAmount = toPositive(amountBTC);
-  const btcData = await CoinGeckoClient.coins.fetch('bitcoin', {});
-  const btcUsdPrice = btcData.data.market_data.current_price.usd;
-
-  return (realAmount * btcUsdPrice).toFixed(0);
+  const btcUsdPrice = await coinGecko.simplePrice({vs_currencies:"usd",ids:"bitcoin"});
+  return (realAmount * btcUsdPrice.bitcoin.usd).toFixed(0);
 }
 
 //Creating the Discord.js Client for This Bot with some default settings ;) and with partials, so you can fetch OLD messages
